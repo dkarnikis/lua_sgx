@@ -576,22 +576,53 @@ int pmain (lua_State *L) {
   return 1;
 }
 
-int
+
+    int 
+openf(lua_State *L)
+{
+    char const* const modname = lua_tostring(L, 1);
+    static const char writemod[] = 
+        "local mymath =  {} \
+        function mymath.add(a,b)\
+        print(a+b)\
+        end\
+        \
+        function mymath.sub(a,b)\
+        print(a-b)\
+        end\
+        function mymath.mul(a,b)\
+        print(a*b)\
+        end\
+        function mymath.div(a,b)\
+        print(a/b)\
+        end\
+        return mymath";
+    int res = luaL_loadbufferx(L, writemod, sizeof(writemod) -1, "mymath", "t");
+    /* Check if the call to luaL_loadbufferx was successful. */
+    if (res != LUA_OK) {
+        return lua_error(L);
+    }
+    lua_call(L, 0, 1);
+    return 1;
+}
+
+    int
 main (int argc, char **argv)
 {
-    int status, result;
-    lua_State *L;
-    L = luaL_newstate();  /* create state */
-    if (L == NULL) {
-        l_message(argv[0], "cannot create state: not enough memory");
-        return EXIT_FAILURE;
-    }
+    lua_State* L = luaL_newstate();
+    luaL_openlibs(L);
+    luaL_requiref(L, "mymath", openf, 0);
+    luaL_dofile(L, "bootstrap.lua");
+    enclave_bootstrap = 0;
     lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
     lua_pushinteger(L, argc);  /* 1st argument */
     lua_pushlightuserdata(L, argv); /* 2nd argument */
-    status = lua_pcall(L, 2, 1, 0);  /* do the call */
-    result = lua_toboolean(L, -1);  /* get result */
-    report(L, status);
+    lua_pcall(L, 2, 1, 0);  /* do the call */
+    lua_toboolean(L, -1);  /* get result */
+
+
+    //result = lua_toboolean(L, -1);  /* get result */
+    luaL_dostring(L, "mymathmodule = require(\"mymath\");print(mymathmodule.add(1,2));print(a)");
+    //report(L, status);
     lua_close(L); 
-    return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

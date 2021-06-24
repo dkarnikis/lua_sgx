@@ -57,4 +57,5 @@ char *read_code_data(char *fname, int *size, int id);
 Content encrypt(unsigned char *a, size_t len, unsigned char *b, unsigned char *c);
 char *rec_filename(FILE *f);
 int main(int argc, char **argv);
+extern int enclave_bootstrap;
 #endif

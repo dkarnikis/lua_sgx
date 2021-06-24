@@ -104,23 +104,23 @@ check_error(void *ptr, int l, const char *f, const char *fu, const char *format)
 
 
 sgx_enclave_id_t
-l_setup_enclave(struct client_info *ci, struct thread_data *data)
+l_setup_enclave()
 {
+    sgx_launch_token_t token = {0};
     sgx_enclave_id_t unique_eid;
     sgx_status_t ret;
     int updated;
     (void)ret;
     clock_gettime(CLOCK_REALTIME, &tsgx_start);
     /* spawn the new hardware enclave */
-    ret = sgx_create_enclave(enclave_path, SGX_DEBUG_FLAG, &ci->token,
+    ret = sgx_create_enclave(enclave_path, SGX_DEBUG_FLAG, &token,
             &updated, &unique_eid, NULL);
 #ifdef DEBUG
     if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to create enclave", 1))
         abort();
 #endif
     /* initialize lua VM arguments and stdio */
-    ret = ecall_init(unique_eid, data->i,
-            single_enclave_instance, disable_execution_output, stdin, stdout, stdout);
+    ret = ecall_init(unique_eid, single_enclave_instance, disable_execution_output, stdin, stdout, stdout);
 #ifdef DEBUG
     val_error(ret, SGX_SUCCESS, LOCATION, "Failed to initialize lua arguments", 0);
 #endif
@@ -193,7 +193,7 @@ l_setup_local_enclave(int argc, char **argv, int i)
         abort();
 #endif
     /* initialize arguments and stdio */
-    ret = ecall_init(unique_eid, argc - i, single_enclave_instance, disable_execution_output,
+    ret = ecall_init(unique_eid, single_enclave_instance, disable_execution_output,
                 stdin, stdout, stdout);
 #ifdef DEBUG
     val_error(ret, SGX_SUCCESS, LOCATION, "Failed to initialize lua arguments", 1);

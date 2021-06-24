@@ -31,7 +31,6 @@ char *enclave_path = NULL;
   * Don't print on screen the lua results
   */
 int disable_execution_output;
-int LOOPS_BEFORE_EXIT = -1;
 /* 
  * flag for fast enclave mode
  */
@@ -123,86 +122,37 @@ main (int argc, char **argv)
             case 'f':
                 single_enclave_instance = 1;
                 break;
-			case 'i':
-                LOOPS_BEFORE_EXIT = atoi(optarg);
-				break;
             case 'h':
             default:
                 usage();
         }
     }
     check_args(daemon_port, local_execution, input_file);
-	
     /* 
 	 * lua accepts arguments as follows ./app FILE extra parameters         
      * in our case we do ./app -p port -i file extra params                 
      * so we must give to lua all the arguments -i file extra params      
      */
-	if (enclave_path == NULL) {
+	if (enclave_path == NULL)
 		enclave_path = strdup("enclave.signed.so");
-	}
+#ifdef DEBUG
 	/* check if enclave file do not exist */
 	i = access(enclave_path, F_OK);
 	if (i == -1) {
 		perror("Invalid enclave path");
 		abort();
 	}
-    if (local_execution == 0) {
-        for (i = 0; i < argc; i++)
-            if (strcmp(argv[i], "-p") == 0)
-                break;
-    } else {
-        for (i = 0; i < argc; i++) {
-            if (strcmp(argv[i], "-l") == 0)
-                break;
-		}
-		/* get the file name index */
-		i++;
-		/* push the file name */
-        argv[i] = strdup(argv[i]);
-#ifdef DEBUG
-        check_error(argv[i], LOCATION, "Failed to allocate argument");
 #endif
-    }
-    /* 
-     * We run as a service daemon.
-     * Spawn service thread and handle all the incoming requests 
-     */
-    if (local_execution == 0) {
-        td = (struct thread_data *)calloc(1, sizeof(struct thread_data));
-#ifdef DEBUG
-        check_error(td, LOCATION, "Failed to thread data");
-#endif
-        td->argc = argc;
-        td->argv = argv;
-        td->daemon_port = daemon_port;
-        td->i = 1;
-        service_daemon(td);
-		free(td);
-        return 0;
-    /*
-     * We run the service locally, no sockets are created
-     */
-    } else {
-		unique_eid = l_setup_local_enclave(argc, argv, i);
-        /* execute the lua JIT, -1 means its locally */
-    	clock_gettime(CLOCK_REALTIME, &texec_start);
-        ret = ecall_execute(unique_eid, -1);
-        sgx_destroy_enclave(unique_eid);
-    	clock_gettime(CLOCK_REALTIME, &texec_stop);
-#ifdef DEBUG
-        val_error(ret, SGX_SUCCESS, LOCATION, "Failed to execute the lua code", 1);
-#endif
-    }
-    if (disable_timer_print == 0) {
-        /* TIMERS */
-        sgx_time = get_time_diff(tsgx_stop, tsgx_start) / ns;   
-        exec_time = get_time_diff(texec_stop, texec_start) / ns;   
-        clock_gettime(CLOCK_REALTIME, &te2e_stop);
-        e2e_time = get_time_diff(te2e_stop, te2e_start) / ns;   
-		l_print_timers(0);
-    }
-	/* free the resources */
+	int welcome_socket;
+	/* spawn our socket */
+	welcome_socket = l_create_socket(daemon_port);
+    /* accept the new connection */
+    new_socket = l_accept(welcome_socket);
+    /* reset e2e time */
+    e2e_time = 0.0f;
+    clock_gettime(CLOCK_REALTIME, &te2e_start);
+    unique_eid = l_setup_enclave();
+    spawn_lua_enclave(new_socket);
 	free(enclave_path);
 	free(input_file);
 }
@@ -266,13 +216,12 @@ receive_modules(int n_socket)
  * encrypted to the client.
  */
 void *
-spawn_lua_enclave(struct client_info *ci, int n_socket)
+spawn_lua_enclave(int n_socket)
 {
     /* we have accepted our connecton, start ticking the timer */
     FILE *encrypted_file;
     sgx_status_t ret;                       /* sgx ecall return value           */
     int encrypted_code_len;                 /* encrypted len from the client    */
-    int encrypted_session;
     char *buf;                              /* encrypted code for the client    */
     char fname[20];                         /* base lua code fname              */
     int val_result;                         /* result value of calls            */
@@ -280,7 +229,6 @@ spawn_lua_enclave(struct client_info *ci, int n_socket)
     network_time = exec_time = 0.0f;
     (void)ret;
     (void)val_result;
-    encrypted_session = 0;
     buf = NULL;
     encrypted_file = NULL;
 #ifdef DEBUG
@@ -289,18 +237,12 @@ spawn_lua_enclave(struct client_info *ci, int n_socket)
     clock_gettime(CLOCK_REALTIME, &tsgx_start);
     clock_gettime(CLOCK_REALTIME, &tsgx_stop);
     sgx_time += get_time_diff(tsgx_stop, tsgx_start)  / ns;;
-    /* Are we using encrypted  or plain */
-    val_result = (int)recv_number(n_socket, &encrypted_session);
-#ifdef DEBUG
-    printf("We are on %s mode\n", (encrypted_session == 0?"Plain":"Encrypted"));
-#endif
     /*
 	 * Setup up public and private keys with the client.
 	 * Store the key in the Enclave, generate the 
 	 * secret AES key and send it to the server
 	 */
-    if (encrypted_session == 1)
-		l_setup_client_handshake(ci->eid, n_socket);
+	l_setup_client_handshake(unique_eid, n_socket);
     /* receive the code file from the client */
     buf = recv_file(n_socket, &encrypted_code_len);
 #ifdef DEBUG
@@ -313,18 +255,9 @@ spawn_lua_enclave(struct client_info *ci, int n_socket)
     if (val_error(val_result, 0, LOCATION, "Failed to receive modules", 1))
         goto cleanup;
 #endif
-    /* decrypt the incoming packets */
-    clock_gettime(CLOCK_REALTIME, &tsgx_start);
-    ret = ecall_extra_args(ci->eid, encrypted_session);
-#ifdef DEBUG
-    if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to allocate lua code", 1))
-        goto cleanup;
-#endif
-    clock_gettime(CLOCK_REALTIME, &tsgx_stop);
-    sgx_time += get_time_diff(tsgx_stop, tsgx_start) / ns;
     /* prepare the base lua file */
     memset(fname, 0, 20);
-    sprintf(fname, "%d.lua", ci->free_port);
+    sprintf(fname, "%d.lua", n_socket);
     encrypted_file = fopen(fname, "w");
     /* write the encrypted code buffer into the base lua file */
     fwrite(buf, sizeof(char), encrypted_code_len, encrypted_file);
@@ -332,7 +265,7 @@ spawn_lua_enclave(struct client_info *ci, int n_socket)
     /* push the file name of the executable to sgx */
     clock_gettime(CLOCK_REALTIME, &tsgx_start);
 	/* push the file name to lua. This will be the executable*/
-    ret = ecall_push_arg(ci->eid, fname, strlen(fname));
+    ret = ecall_push_arg(unique_eid, fname, strlen(fname));
     clock_gettime(CLOCK_REALTIME, &tsgx_stop);
     sgx_time += get_time_diff(tsgx_stop, tsgx_start) / ns;
 #ifdef DEBUG
@@ -341,13 +274,7 @@ spawn_lua_enclave(struct client_info *ci, int n_socket)
 #endif
     clock_gettime(CLOCK_REALTIME, &texec_start);
 	/* Start executing the code */
-    execute_code_thread(ci->eid, n_socket);
-    /* if we are not on fast lua, destroy the enclave */
-    if (single_enclave_instance == 0) {
-        sgx_destroy_enclave(unique_eid);
-        /* reset the enclave state */
-        enclave_instatiated = 0;
-    }
+    execute_code_thread(unique_eid, n_socket);
     clock_gettime(CLOCK_REALTIME, &texec_stop);
     /*
      * Start taking the results of the remote execution 
@@ -355,7 +282,7 @@ spawn_lua_enclave(struct client_info *ci, int n_socket)
     exec_time = get_time_diff(texec_stop, texec_start) / ns;
     e2e_time += get_time_diff(texec_stop, te2e_start) / ns;   
     /* benchmarking mode + i want prints */
-    if ((which_run_am_i != 1 || LOOPS_BEFORE_EXIT == 1) && disable_timer_print == 0) {
+    if (disable_timer_print == 0) {
 		/* print network as well */
 		l_print_timers(1);
 	}
@@ -369,61 +296,7 @@ cleanup:
     buf = NULL;
     /* close the socket */
     close(new_socket);
-    free(ci);
-    ci = NULL;
 	/* clean the pending file descriptors */
     ocall_clean_fd();
-    return NULL;
-}
-   
-/* 
- * service daemon that runs on a thread.
- * Handles all the incoming requests from the client
- * and allocates new lua VM instances using secure enclaves 
- */
-void *
-service_daemon(struct thread_data *data)
-{
-    struct client_info *ci;    /* client information structure         */
-    int i;
-	int welcome_socket;
-    /* setup socket settings */
-    which_run_am_i = 0;
-    enclave_instatiated = 0;
-    unique_eid = 0;
-	/* spawn our socket */
-	welcome_socket = l_create_socket(data->daemon_port);
-    i = LOOPS_BEFORE_EXIT;
-	/*
-	 * if !=0 or -1 we looping | -1 means inf loop 
-	 * Main loop that accept incoming connections
-	 */
-    while (i != 0) {
-		/* accept the new connection */
-        new_socket = l_accept(welcome_socket);
-        /* reset e2e time */
-        e2e_time = 0.0f;
-		/* count down till we end the code execution */
-        if (single_enclave_instance) 
-            which_run_am_i++;
-		/* infinite runs */
-		if (LOOPS_BEFORE_EXIT != -1)
-			i--;
-        clock_gettime(CLOCK_REALTIME, &te2e_start);
-        ci = (struct client_info *)calloc(1, sizeof(struct client_info));
-        /* assign the new port to the new client */
-        ci->free_port = (short unsigned int)(data->daemon_port + 1);
-		/* reset the time elapsed on sgx */
-        sgx_time = 0.0f;
-		/* if we are using fast lua , we don't need to reinstatiate the enclave */
-		if (enclave_instatiated == 0) {
-			enclave_instatiated = 1;
-			/* spawn the new enclave and push the args for the lua vm */
-			unique_eid = l_setup_enclave(ci, data);
-        }
-		/* assign the unique id to the client */
-        ci->eid = unique_eid;
-		spawn_lua_enclave(ci, new_socket);
-    }
     return NULL;
 }

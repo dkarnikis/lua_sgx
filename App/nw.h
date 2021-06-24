@@ -27,15 +27,4 @@ char *recv_file(int socket, int *s);
 
 
 extern double network_time;
-
-struct client_info {
-    char hoststr[NI_MAXHOST];
-    char portstr[NI_MAXSERV];  
-    short unsigned int free_port;
-    sgx_launch_token_t token = {0};
-    sgx_enclave_id_t eid;
-};
-
-
-
 #endif

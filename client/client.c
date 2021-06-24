@@ -37,7 +37,7 @@ unsigned char *decrypt(unsigned char *key, Content encrypted_buffer, unsigned ch
 void init_ctr(struct ctr_state *state, const unsigned char iv[16]);
 int fencrypt(char *text, char *cipher, const unsigned char *enc_key, struct ctr_state *state, unsigned int buffer_size);
 void usage(void);
-void check_args(int port, char *server, char *input, int nom, int mc, int enc, int rk, int wk);
+void check_args(int port, char *server, char *input, int nom, int mc);
 
 	void
 handle_openssl_error(void)
@@ -210,14 +210,8 @@ usage()
  * check the validity of arguments
  */
 	void
-check_args(int port, char *server, char *input, int nom, int mc, int enc, int rk, int wk)
+check_args(int port, char *server, char *input, int nom, int mc)
 {
-	if (enc == 1) {
-		if (rk == 1 && wk == 1) {
-			fprintf(stdout, "Cannot use read keys and write keys the same time\n");
-			usage();
-		}
-	}
 	if(port <= 0){
 		fprintf(stdout, "Port number must be positive\n");
 		usage();
@@ -236,7 +230,7 @@ check_args(int port, char *server, char *input, int nom, int mc, int enc, int rk
 	}
 }
 
-	int
+    int
 get_file_size(FILE *file)
 {
 	int size;
@@ -247,7 +241,7 @@ get_file_size(FILE *file)
 }
 
 	void
-send_code_to_vm(int sock, char *string, int mode)
+send_code_to_vm(int sock, char *string)
 {
 	FILE *code;
 	int size;
@@ -275,7 +269,6 @@ send_code_to_vm(int sock, char *string, int mode)
 	/* copy file contents to buffer */
 	fread(data, sizeof(char), size, code);
 	fclose(code);
-	if (mode == 1) {
 		copied = 0;
 		counted = size;
 #define MAX_COPY_SIZE BUFSIZ -1
@@ -302,18 +295,10 @@ send_code_to_vm(int sock, char *string, int mode)
 		printf("Sending %d\n", size);
 #endif
 		send_data(sock, encrypted, a);
-	} else {
-#ifdef DEBUG
-		printf("Sending ->%d\n", size);
-#endif
-		//data[size + 1] = '\0';
-		send_int(sock, size);
-		send_data(sock, data, size);   
-	}
 }
 
-	void
-send_encrypted_string(int sock, char *string, int mode)
+void
+send_encrypted_string(int sock, char *string)
 {
 #if defined(DEBUG)
 	printf("Opening %s\n", string);
@@ -360,7 +345,6 @@ main(int argc, char **argv)
 	int response_len;           /* the len of the reponse   data    */
 	int enabled;                /* socket flag                      */
 	int i;                      /* counter                          */
-	int encrypt_mode;           /* do we encrypt the data or not    */
 	int module_counter;         /* how many counters do we send     */
 	int number_of_modules;      /* module counter                   */
 	int server_port;            /* server port to connect to        */
@@ -379,31 +363,18 @@ main(int argc, char **argv)
 	module_array = NULL;
 	keys = NULL;
 	enabled = 1;
-	encrypt_mode = 0;
 	module_counter = 0;
 	number_of_modules = 0;
 	response_len = 0;
 	server_port = 0;
-	server_port = 0;
-	read_keys = 0;
-	store_keys = 0;
 	file_name = NULL;
 	server_name = NULL;
 	memset(client_public_key, 0, crypto_box_PUBLICKEYBYTES);
 	memset(client_secret_key, 0, crypto_box_SECRETKEYBYTES);
 	memset(server_public_key, 0, crypto_box_PUBLICKEYBYTES);
 	srand(time(0));
-	while ((opt = getopt(argc, argv, "p:s:i:n:m:rweh")) != -1){
+	while ((opt = getopt(argc, argv, "p:s:i:n:m:h")) != -1){
 		switch(opt) {
-			case 'w':
-				store_keys = 1;
-				break;
-			case 'r':
-				read_keys = 1;
-				break;
-			case 'e':
-				encrypt_mode = 1;
-				break;
 			case 'p':
 				server_port = atoi(optarg);
 				break;
@@ -430,8 +401,7 @@ main(int argc, char **argv)
 		}
 	}
 	/* check arguments */
-	check_args(server_port, server_name, file_name, number_of_modules, module_counter, 
-			encrypt_mode, read_keys, store_keys);
+	check_args(server_port, server_name, file_name, number_of_modules, module_counter);
 	/* init the server */
 	memset(&server_address, 0, sizeof(server_address));
 	server_address.sin_family = AF_INET;
@@ -455,51 +425,28 @@ main(int argc, char **argv)
 	printf("Connected to server: %s with port: %d\n", server_name, server_port);
 	printf("Waiting Port\n");
 #endif
-	send_int(sock, encrypt_mode);
-	if (encrypt_mode == 1) {
-		if (read_keys == 1) {
-			/* 
-			 * since we are reading keys from a file, we do not have to send 
-			 * modules again 
-			*/
-			number_of_modules = 0;
-			keys = fopen("keys.txt", "r");
-			/* parse the keys from the file */
-			fread(client_public_key, crypto_box_PUBLICKEYBYTES, 1, keys);
-			fread(client_secret_key, crypto_box_SECRETKEYBYTES, 1, keys);
-			fclose(keys);
-		} else {
-			/* generate the keys please */
-			crypto_box_keypair(client_public_key, client_secret_key);
-		}
-		if (store_keys == 1) {
-			keys = fopen("keys.txt", "w");
-			/* generate the keys */
-			fwrite(client_public_key, crypto_box_PUBLICKEYBYTES, 1, keys);
-			fwrite(client_secret_key, crypto_box_SECRETKEYBYTES, 1, keys);
-			fclose(keys);
-		}
-		/* send shared key */
-		send_client_public(sock, client_public_key, crypto_box_PUBLICKEYBYTES);
+    /* generate the keys please */
+    crypto_box_keypair(client_public_key, client_secret_key);
+    /* send shared key */
+    send_client_public(sock, client_public_key, crypto_box_PUBLICKEYBYTES);
 #ifdef DEBUG
-		print_key("Public Key: ", client_public_key, crypto_box_PUBLICKEYBYTES);
+    print_key("Public Key: ", client_public_key, crypto_box_PUBLICKEYBYTES);
 #endif
-		/* receive shared key */
-		recv_shared_key(sock, server_public_key, crypto_box_PUBLICKEYBYTES);
+    /* receive shared key */
+    recv_shared_key(sock, server_public_key, crypto_box_PUBLICKEYBYTES);
 #ifdef DEBUG
-		printf("Received server pkey\n");
+    printf("Received server pkey\n");
 #endif
-		/* receive the keysize */
-		read(sock, &i, sizeof(int));
-		c.size = i;
-		/* allocate the buffer to store the key */
-		c.bytes = calloc(1, c.size);
-		/* receive shared key */
-		read(sock, c.bytes, c.size);
-		decrypt(aes_key, c, server_public_key, client_secret_key);
-	}
+    /* receive the keysize */
+    read(sock, &i, sizeof(int));
+    c.size = i;
+    /* allocate the buffer to store the key */
+    c.bytes = calloc(1, c.size);
+    /* receive shared key */
+    read(sock, c.bytes, c.size);
+    decrypt(aes_key, c, server_public_key, client_secret_key);
 	/* send the encrypted file */
-	send_code_to_vm(sock, file_name, encrypt_mode);
+	send_code_to_vm(sock, file_name);
 #ifdef DEBUG
 	/* send the module number to the server */
 	printf("Number of modules to send: " "%d\n", number_of_modules);
@@ -508,11 +455,11 @@ main(int argc, char **argv)
 	/* send the modules to the server */
 	for (i = 0; i < number_of_modules;i++){
 		char *bob = strdup(module_array[i]);
-		send_code_to_vm(sock, bob, encrypt_mode);
+		send_code_to_vm(sock, bob);
 #if DEBUG
 		printf("Sending module %s\n", bob);
 #endif
-		send_encrypted_string(sock, basename(bob), 0);
+		send_encrypted_string(sock, basename(bob));
 	}
 #ifdef DEBUG
 	fflush(stdout);
@@ -537,12 +484,8 @@ main(int argc, char **argv)
 	init_ctr(&state, iv);
 	/* allocate space for the decrypted results */
 	/* decrypt the data */
-	if (encrypt_mode == 1) {
-		response_plain = (char *)calloc(1, sizeof(char) * (response_len + 16));
-		fdecrypt(response_len, response, response_plain, aes_key, &state);
-	} else {
-		response_plain = response;
-	}
+    response_plain = (char *)calloc(1, sizeof(char) * (response_len + 16));
+    fdecrypt(response_len, response, response_plain, aes_key, &state);
 	for (i = 0; i < response_len; i++)
 		printf("%c", response_plain[i]);
 	fflush(stdout);

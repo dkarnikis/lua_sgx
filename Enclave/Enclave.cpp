@@ -21,24 +21,18 @@ std::string server_response;
 /* the keypair of the server */
 unsigned char server_public_key[crypto_box_PUBLICKEYBYTES];
 unsigned char server_secret_key[crypto_box_SECRETKEYBYTES];
-int encrypted_mode = 0;                 /* are we using encryption                  */
 int argc;                               /* number of lua arguments                  */
 int count = 0;                          /* index for arguments                      */  
 int use_mempool = 0;                 	/* use custom mempool                       */
 char **argv;                            /* the actual arguments of lua              */
-int single_enclave_instance = 0;        /* use a single Lua instance, faster code   */
 int disable_execution_output = 0;       /* dont print the lua output on screen      */
-struct client_info_t {
-    int id;
-    unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
-    sgx_aes_ctr_128bit_key_t p_key[16];
-	unsigned char *enc;
-	short size = 0;
-};
+unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
+sgx_aes_ctr_128bit_key_t p_key[16];
+unsigned char *enc;
+short size = 0;
+int enclave_bootstrap = 1;
 /* the current user id */
 int current_user_id = 420;
-/* holds all the entries for all the clients and their sockets */
-std::vector<struct client_info_t *>client_info;
 
 int run_locally = 0;                    /* do we run locally                        */
 std::string code_to_execute = "";
@@ -64,41 +58,6 @@ print_key(const char *s, uint8_t *key, int size)
     for (i = 0; i < size; i++)
         printf("%u", key[i]);
     printf("\n");
-}
-
-
-
-
-/* 
- * get a client_info entry index by its id
- */
-int 
-get_client_by_pkey(unsigned char pkey[crypto_box_PUBLICKEYBYTES])
-{
-    int i;
-    for (i = 0; i < (long)client_info.size(); i++) {
-		if (memcmp(pkey, client_info.at(i)->client_public_key, crypto_box_PUBLICKEYBYTES) == 0) {
-            return i;
-		}
-	}
-	/* the client MUST EXIST */
-    return -1;
-}
-
-
-/* 
- * get a client_info entry index by its id
- */
-int 
-get_client_by_id(int id)
-{
-    int i;
-    for (i = 0; i < (long)client_info.size(); i++)
-        if (client_info.at(i)->id == id) {
-            return i;
-		}
-	/* the client MUST EXIST */
-    abort();
 }
 
 int
@@ -177,29 +136,26 @@ ecall_send_aes_key(int id)
 {
     Content c;
     int k;
-    int index;
     unsigned char buffer[AES_KEY_SIZE];
-    index = get_client_by_id(current_user_id);
+    //index = get_client_by_id(current_user_id);
 	/* 
 	 * A new client request is received, that has size == 0 -> 
 	 * allocate new buffers
  	 */
-	if (client_info.at(index)->size == 0) {
 		/* generate the AES KEY */
 		randombytes(buffer, AES_KEY_SIZE);
 		/* copy the random key to our aes key */
 		for (k = 0; k < AES_KEY_SIZE; k++)
-			client_info.at(index)->p_key[0][k] = buffer[k];
+		    p_key[0][k] = buffer[k];
     	/* encrypt the shared key and send it to the other party */
     	c = encrypt(buffer, (size_t)AES_KEY_SIZE, 
-				client_info.at(index)->client_public_key, server_secret_key);
+				client_public_key, server_secret_key);
 		/* allocate new buffer for our encrypted AES KEY */
-		client_info.at(index)->enc = (unsigned char *)calloc(1, c.size);
-		memcpy(client_info.at(index)->enc, c.bytes, c.size);
-		client_info.at(index)->size = c.size;
-	}
+		enc = (unsigned char *)calloc(1, c.size);
+		memcpy(enc, c.bytes, c.size);
+		size = c.size;
 	/* fetch the encrypted AES KEY and send it to the client */
-    ocall_send_packet(client_info.at(index)->enc, (int)client_info.at(index)->size, id);
+    ocall_send_packet(enc, size, id);
 }
 
 /*
@@ -210,13 +166,11 @@ code_decrypt(char *str, int len, int cid)
 {
     uint8_t iv[AES_KEY_SIZE];
     char *res;
-    int index;
     sgx_status_t ret;
-    index = get_client_by_id(current_user_id);
     ret = SGX_SUCCESS;
     res = (char *)sgx_alloc(len + 1);
     memset(iv, '5', 16);
-    ret = sgx_aes_ctr_decrypt(client_info.at(index)->p_key, (uint8_t *)str, len, iv, 16, (uint8_t *)res);
+    ret = sgx_aes_ctr_decrypt(p_key, (uint8_t *)str, len, iv, 16, (uint8_t *)res);
     if (ret != SGX_SUCCESS)
         exit(EXIT_FAILURE);
     return res;
@@ -234,20 +188,11 @@ ecall_encrypt(char *str, int len, int id)
     xd = (char *)sgx_alloc(len);
     ret = SGX_SUCCESS;
     memset(iv, '5', 16);
-    ret = sgx_aes_ctr_encrypt(client_info.at(get_client_by_id(current_user_id))->p_key, (uint8_t *)str, len, iv, 16, (uint8_t *)xd);
+    ret = sgx_aes_ctr_encrypt(p_key, (uint8_t *)str, len, iv, 16, (uint8_t *)xd);
     if (ret != SGX_SUCCESS)
         exit(EXIT_FAILURE);
     ocall_send_packet((unsigned char *)xd, len, id);
     sgx_free(xd);
-}
-
-/*
- * init variables from the enclave and lua vm
- */
-void
-ecall_extra_args(size_t mode)
-{
-    encrypted_mode = mode;
 }
 
 /*
@@ -267,44 +212,16 @@ split_string(const std::string& str)
     return strings;
 }
 
-/*
- * used on multiple clients mode, we need the cid of the client, in order
- * to decipher the code with the appropriate key
- */
-void
-ecall_add_code_encrypted(char *code, int buffer_size, int cid)
-{
-    int fsize;
-    char *haha;
-    /* plain code without encryption, insert it to the code queue */
-    haha = read_code_data(code, &fsize, cid);
-    std::string p(haha, fsize);
-	free(haha);
-    executable_code_vector = split_string(p);
-}
-
-/*
- * add plain code to execute in the execution buffer queue
- */
-void
-ecall_add_code(char *code, int buffer_size)
-{
-    /* plain code without encryption, insert it to the code queue */
-    std::string p(code, buffer_size);
-    code_to_execute = "dofile(\"" + p +"\")\n";
-    executable_code_vector = split_string(code_to_execute);
-}
 
 /*
  * initialize enclave flags for lua vm
  */
 void
-ecall_init(int arg, int flm, int di, FILE *stdi, FILE *stdo, FILE *stde)
+ecall_init(int arg, int di, FILE *stdi, FILE *stdo, FILE *stde)
 {
     stdin = stdi;
     stdout = stdo;
     stderr = stde;
-    single_enclave_instance = flm;
     argc = arg;
     disable_execution_output = di;
     argv = (char **)sgx_alloc((argc + 2) * sizeof(char *));
@@ -349,14 +266,11 @@ read_code_data(char *fname, int *size, int id)
     ocall_fread(&a, data, sizeof(char), *size, code);
     fclose(code);
     /* perform decrypt here if we have encrypted text */
-    if (encrypted_mode == 1) {
-        /* we are in encryption mode, decrypt the buffer */
-        plain_data = code_decrypt((char *)data, *size, id);
-        sgx_free(data);
-        plain_data[*size] = '\0';
-        return plain_data;
-    } else
-        return (char *)data;
+    /* we are in encryption mode, decrypt the buffer */
+    plain_data = code_decrypt((char *)data, *size, id);
+    sgx_free(data);
+    plain_data[*size] = '\0';
+    return plain_data;
 }
 
 /*
@@ -372,6 +286,8 @@ ecall_execute(int id)
     response = first_data = NULL;
     if (id == -1)
         run_locally = 1;
+    for (int i = 0; i < argc; i++)
+        printf("%s\n", argv[i]);
     /* trigger code execution */
     main(count, argv);
 #ifdef DEBUG
@@ -386,19 +302,9 @@ ecall_execute(int id)
     server_response_len = server_response.length();
     response = (char *)sgx_alloc(sizeof(char) * server_response_len + 1);
     strncpy(response, server_response.c_str(), server_response_len + 1);
-    if (encrypted_mode == 1) {
-    	ecall_encrypt(response, server_response_len, id);
-    } else
-    	ocall_send_packet((unsigned char *)response, server_response_len, id);
+    ecall_encrypt(response, server_response_len, id);
 	/* cleanup time */
     sgx_free(response);
-#if 1
-	if (single_enclave_instance == 0) {
-		for (i = 0; i < client_info.size(); i++)
-			sgx_free(client_info.at(i));
-		client_info.clear();
-	}
-#endif
 	server_response = "";
 	code_to_execute = "";
 	executable_code_vector.clear();
@@ -599,11 +505,11 @@ fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
      * and the the rest
      */
     ocall_fread(&a, ptr, size, nmemb, stream);
-    if (encrypted_mode == 1) {
-        /* if we did not read anything, skip */
-        if (a == 0) 
-            return a;	
-    	xd = NULL;
+    /* if we did not read anything, skip */
+    if (a == 0) 
+        return a;	
+    if (enclave_bootstrap == 0) {
+        xd = NULL;
         /* we are in encryption mode, decrypt the buffer */
         xd = code_decrypt((char *)ptr, a, current_user_id);
         /* copy the buffer into lua code buffer(ptr) */
@@ -635,7 +541,7 @@ getc(FILE *stream)
      * and each time a getc is executed, we return the next char from the buffer
      * ignoring the actual use of getc
      */
-    if (strcmp(rec_filename(stream), rec_filename(stdin)) == 0 && encrypted_mode == 1) {
+    if (strcmp(rec_filename(stream), rec_filename(stdin)) == 0) {
         /* init phase */
         if (counter == -1) {
             /* reset the buffer if it is not in the correct place */
@@ -838,20 +744,5 @@ pclose(FILE *stream)
 void
 ecall_register_client(int client_id, unsigned char *client_key, int k)
 {
-    int index;
-    index = get_client_by_pkey(client_key);
-	if (index == -1) {
-		current_user_id++;
-	    struct client_info_t *ci;
-    	ci = (struct client_info_t *)calloc(1, sizeof(struct client_info_t));
-    	ci->id = current_user_id;
-		memcpy(ci->client_public_key, client_key, k);
-    	client_info.push_back(ci);
-	} else {
-		//client_info.at(index)->id = client_id;
-		/* we found our pkey, update tis entries */
-		memcpy(client_info.at(index)->client_public_key, client_key, k);
-	}
+	memcpy(client_public_key, client_key, k);
 }
-
-
