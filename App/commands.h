@@ -1,0 +1,5 @@
+enum LUA_CMD {
+    REGISTER_NEW_CLIENT = 0,
+    SEND_NEW_FILE = 1,
+    END_EXECUTION = 2
+};

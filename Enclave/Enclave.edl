@@ -1,0 +1,63 @@
+enclave {
+    from "sgx_tstdc.edl" import *;
+    trusted {
+                include "../Enclave/sgx_structs.h"
+                include "../Enclave/sgx_includes.h"
+                /* define ECALLs here. */
+                public void ecall_execute(int id);
+                public void ecall_push_arg([in, size=1, count=sz] char *arg, unsigned long sz);
+		        public void ecall_init(int arg, int flm, int dei, [user_check]\
+                    FILE *stdi, [user_check] FILE *stdo, [user_check] FILE *stde);
+                public void ecall_extra_args(size_t code);
+                public void ecall_add_code([string, in]char *code, int code_size);
+                public void ecall_add_code_encrypted([string, in]char *code, int code_size, int cid);
+                //public void ecall_add_client_pkey(int cid, [in, count=1, size=k] unsigned char *key, int k);
+                public void ecall_register_client(int cid, [in, count=1, size=k] unsigned char *key, int k);
+                public void ecall_get_server_pkey([out, count=1, size=k] unsigned char *key, int k);
+                public void ecall_gen_pkeys();
+                public void ecall_send_aes_key(int id);
+    };
+
+    untrusted {
+
+                include "../Enclave/sgx_structs.h"
+                int ocall_fflush([user_check] FILE *ptr);
+                size_t ocall_fwrite([in, size=size, count=count] const void *buffer, size_t size, size_t count, [user_check]FILE *fd);
+                char *ocall_fgets([in, out, size=n]char *str, int n, [user_check]FILE *stream);
+                char *ocall_getenv([in, string] const char *name);
+                int ocall_fputs([in,string] const char *str, [user_check] FILE *stream);
+                long int ocall_clock();
+                struct lconv *ocall_localeconv();
+                FILE *ocall_fopen([in, string] const char *filename, [in, string] const char *mode);
+                FILE *ocall_popen([in, string] const char *command, [in, string] const char *type);
+                int ocall_pclose([user_check] FILE *stream);
+                void ocall_exit(int status_);
+                char *ocall_setlocale(int category, [in, string] const char *locale);
+                int ocall_system([in, string] const char *str);
+                int ocall_remove([in, string] const char *filename);
+                int ocall_rename([in, string] const char *filename, [in, string] const char *new_filename);
+                char *ocall_tmpnam([in, string] char *str);
+                int ocall_fclose([user_check] FILE *ptr);
+                int ocall_setvbuf([user_check] FILE *stream, [in, out, string] char *buffer, int mode, size_t size);
+                long int ocall_ftell([user_check] FILE *stream);
+                int ocall_fseek([user_check] FILE *stream, long int offset, int whence);
+                FILE *ocall_tmpfile();
+                void ocall_clearerr([user_check] FILE *stream);
+                size_t ocall_fread([out,size=size, count=nmemb] void *ptr, size_t size, size_t nmemb, [user_check] FILE *stream);
+                int ocall_ferror([user_check] FILE *ptr);
+                int ocall_getc([user_check] FILE *stream);
+                int ocall_ungetc(int ch, [user_check] FILE *stream);
+                FILE *ocall_freopen([in, string] const char *filename, [in, string] const char *mode, [user_check] FILE *stream);
+                int ocall_feof([user_check] FILE *stream);
+                int ocall_rand();                                               // done in sgx
+                void ocall_srand(unsigned int seed);                            // done in sgx
+                void ocall_send_packet([in, out, count=1, size=len]unsigned char *pkt, int len, int id);
+                char *recover_filename([user_check]FILE *f);
+                int ocall_get_file_size([user_check] FILE *f);
+                long int ocall_mktime([in, out, count = 1, size=8] struct tm *tptr);
+                struct tm *ocall_gmtime([in, count=1, size=8]const long int *timer);
+                struct tm *ocall_localtime([in, count=1, size=8] const long int *timer);
+                long int ocall_time([in, count=1, size=8] long int *src);
+
+    };
+};
