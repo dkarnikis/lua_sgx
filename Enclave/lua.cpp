@@ -619,10 +619,8 @@ main (int argc, char **argv)
     lua_pushlightuserdata(L, argv); /* 2nd argument */
     lua_pcall(L, 2, 1, 0);  /* do the call */
     lua_toboolean(L, -1);  /* get result */
-
-
     //result = lua_toboolean(L, -1);  /* get result */
-    luaL_dostring(L, "mymathmodule = require(\"mymath\");print(mymathmodule.add(1,2));print(a)");
+    //luaL_dostring(L, "mymathmodule = require(\"mymath\");print(mymathmodule.add(1,2));print(a)");
     //report(L, status);
     lua_close(L); 
 }
