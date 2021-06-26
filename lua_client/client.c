@@ -36,12 +36,12 @@ void recv_shared_key(int sock, uint8_t *key, int size);
 void send_client_public(int sock, uint8_t *key, int size);
 int fdecrypt(unsigned int len, char *cipher, char *text, const unsigned char *enc_key, 
         struct ctr_state *state);
+void recv_number(int sock, int *num);
 
 
 
 void output_key(char *str, unsigned char key[], int key_size);
 unsigned char iv[16] = {5};
-unsigned char aes_key[16] = {0};
 unsigned char *decrypt(unsigned char *key, Content encrypted_buffer, unsigned char *client_public_key, unsigned char *server_secret_key);
 void init_ctr(struct ctr_state *state, const unsigned char iv[16]);
 int fencrypt(char *text, char *cipher, const unsigned char *enc_key, struct ctr_state *state, unsigned int buffer_size);
@@ -49,31 +49,43 @@ void usage(void);
 void check_args(int port, char *server, char *input, int nom, int mc);
 
     char *
-lrecv_response(int sock, size_t response_len)
+lrecv_response(int sock, int *response_len)
 {
     char *response;
     size_t tmp_bytes, rx_bytes;
+#ifdef DEBUG
+    fflush(stdout);
+    printf("Waiting response\n");
+#endif
+    printf("SOCK = %d\n", sock);
+    /* receive the response len of the lua vm */
+    recv_number(sock, response_len);
+#ifdef DEBUG
+    printf("Got response\n");
+#endif
     /* allocate the response buffer, add 8 bytes fixed to fix decryption warnings on valgrind */
-    response = (char *)calloc(1, sizeof(char) * (response_len + 8));
+    response = (char *)calloc(1, sizeof(char) * (*response_len + 8));
     /* receive the response buffer form the lua vm */
     tmp_bytes = 0;
     rx_bytes = 0;
-    while ((tmp_bytes = read(sock, &response[rx_bytes], response_len-rx_bytes)) > 0)
+    while ((tmp_bytes = read(sock, &response[rx_bytes], *response_len-rx_bytes)) > 0)
         rx_bytes += tmp_bytes;
     return response;
 }
 
-    void
+unsigned char *
 lhandshake(int sock)
 {
     int i;
     Content c;
+    unsigned char *aes_key;
     unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
     unsigned char server_public_key[crypto_box_PUBLICKEYBYTES];
     unsigned char client_secret_key[crypto_box_SECRETKEYBYTES];
     memset(client_public_key, 0, crypto_box_PUBLICKEYBYTES);
     memset(client_secret_key, 0, crypto_box_SECRETKEYBYTES);
     memset(server_public_key, 0, crypto_box_PUBLICKEYBYTES);
+    aes_key = (unsigned char *)calloc(16, sizeof(unsigned char));
     /* generate the keys please */
     crypto_box_keypair(client_public_key, client_secret_key);
     /* send shared key */
@@ -94,10 +106,11 @@ lhandshake(int sock)
     /* receive shared key */
     read(sock, c.bytes, c.size);
     decrypt(aes_key, c, server_public_key, client_secret_key);
+    return aes_key;
 }
 
-    char *
-ldecrypt(char *response, size_t response_len)
+char *
+ldecrypt(char *response, size_t response_len, unsigned char *aes_key)
 {
     int i;
     struct ctr_state state;
@@ -116,7 +129,8 @@ ldecrypt(char *response, size_t response_len)
 }
 
 int
-lconnect(char *server_name, int server_port) {
+lconnect(char *server_name, int server_port)
+{
     struct sockaddr_in server_address;
     int enabled;                /* socket flag */
     int sock;
@@ -342,7 +356,7 @@ get_file_size(FILE *file)
 }
 
     void
-send_code_to_vm(int sock, char *string)
+lsend_code(int sock, char *string, unsigned char *aes_key)
 {
     FILE *code;
     int size;
@@ -453,7 +467,9 @@ main(int argc, char **argv)
     int server_port;            /* server port to connect to        */
     int sock;                   /* socket descriptor                */
     int opt;                    /* used for getopt                  */
+    unsigned char *aes_key;
     /* init */
+    aes_key = NULL;
     module_array = NULL;
     module_counter = 0;
     number_of_modules = 0;
@@ -491,9 +507,9 @@ main(int argc, char **argv)
     /* check arguments */
     check_args(server_port, server_name, file_name, number_of_modules, module_counter);
     sock = lconnect(server_name, server_port);
-    lhandshake(sock);
+    aes_key = lhandshake(sock);
     /* send the encrypted file */
-    send_code_to_vm(sock, file_name);
+    lsend_code(sock, file_name, aes_key);
 #ifdef DEBUG
     /* send the module number to the server */
     printf("Number of modules to send: " "%d\n", number_of_modules);
@@ -502,25 +518,14 @@ main(int argc, char **argv)
     /* send the modules to the server */
     for (i = 0; i < number_of_modules;i++){
         char *bob = strdup(module_array[i]);
-        send_code_to_vm(sock, bob);
+        lsend_code(sock, bob, aes_key);
 #if DEBUG
         printf("Sending module %s\n", bob);
 #endif
         send_encrypted_string(sock, basename(bob));
         free(bob);
     }
-#ifdef DEBUG
-    fflush(stdout);
-    printf("Waiting response\n");
-#endif
-    /* receive the response len of the lua vm */
-    recv_number(sock, &response_len);
-#ifdef DEBUG
-    printf("Got response\n");
-#endif
-    response = lrecv_response(sock, response_len);
-    response = ldecrypt(response, response_len);
-    printf("SGX Data:%s\n", response);
+    //response = lrecv_response(sock);
     free(response);
     free(file_name);
     free(server_name);
@@ -531,31 +536,61 @@ main(int argc, char **argv)
 }
 
 
-/*
-   static int foo(lua_State* L)
-   {
-   char *a = luaL_checkstring(L, 1);
-   char *b = luaL_checkstring(L, 2);
-   lua_pushstring(L, a);
-   return 1;
-   }
 
-
-   static luaL_Reg const foolib[] = {
-   { "foo", foo },
-   { "connect", lconnect},
-   { "handhshake", lhandshake},
-   { 0, 0 }
-   };
-
-
-#ifndef FOO_API
-#define FOO_API
-#endif
-
-FOO_API int luaopen_foo(lua_State* L)
+static int lua_connect(lua_State* L)
 {
-luaL_newlib(L, foolib);
-return 1;
+    char *a = luaL_checkstring(L, 1);
+    int n = luaL_checkinteger(L, 2);
+    int sock = lconnect(a, n);
+    lua_pushinteger(L, sock);
+    return 1;
 }
-*/
+
+static int lua_handshake(lua_State* L)
+{
+    unsigned char *aes_key;
+    int n = luaL_checkinteger(L, 1);
+    aes_key = lhandshake(n);
+    lua_pushstring(L, aes_key);
+    return 1;
+}
+
+static int lua_recv_response(lua_State* L)
+{
+    unsigned char *res;
+    char *plain;
+    int b = 0;
+    int a = luaL_checkinteger(L, 1);
+    unsigned char *aes_key = luaL_checkstring(L, 2);
+    res = lrecv_response(a, &b);
+    //response = ldecrypt(response, response_len, aes_key);
+    plain = ldecrypt(res, b, aes_key);
+    lua_pushstring(L, plain);
+    return 1;
+}
+
+static int lua_send_file(lua_State* L)
+{
+    int sock = luaL_checkinteger(L, 1);
+    char *data = luaL_checkstring(L, 2);
+    unsigned char *aes_key = luaL_checkstring(L, 3);
+    lsend_code(sock, data, aes_key);
+    send_int(sock, 0);
+    //lsend_code(int sock, char *string, unsigned char *aes_key)
+
+}
+
+static luaL_Reg const foolib[] = {
+    { "lconnect", lua_connect},
+    { "lhandshake", lua_handshake},
+    { "lsend_file", lua_send_file},
+    { "ldecrypt", ldecrypt},
+    { "lrecv_response", lua_recv_response},
+    { 0, 0 }
+};
+
+int luaopen_foo(lua_State* L)
+{
+    luaL_newlib(L, foolib);
+    return 1;
+}

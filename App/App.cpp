@@ -243,6 +243,7 @@ spawn_lua_enclave(int n_socket)
 	 * secret AES key and send it to the server
 	 */
 	l_setup_client_handshake(unique_eid, n_socket);
+    while (1) {
     /* receive the code file from the client */
     buf = recv_file(n_socket, &encrypted_code_len);
 #ifdef DEBUG
@@ -298,5 +299,6 @@ cleanup:
     close(new_socket);
 	/* clean the pending file descriptors */
     ocall_clean_fd();
+    }
     return NULL;
 }

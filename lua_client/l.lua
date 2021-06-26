@@ -1,1 +1,1 @@
-print('testsd0')
+io.write('testsd0')
