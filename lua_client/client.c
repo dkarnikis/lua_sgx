@@ -551,7 +551,7 @@ static int lua_handshake(lua_State* L)
     unsigned char *aes_key;
     int n = luaL_checkinteger(L, 1);
     aes_key = lhandshake(n);
-    lua_pushstring(L, aes_key);
+    lua_pushlstring(L, aes_key, 16);
     return 1;
 }
 

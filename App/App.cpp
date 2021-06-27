@@ -243,62 +243,60 @@ spawn_lua_enclave(int n_socket)
 	 * secret AES key and send it to the server
 	 */
 	l_setup_client_handshake(unique_eid, n_socket);
-    while (1) {
-    /* receive the code file from the client */
-    buf = recv_file(n_socket, &encrypted_code_len);
+        /* receive the code file from the client */
+        buf = recv_file(n_socket, &encrypted_code_len);
 #ifdef DEBUG
-    if (!buf)
-        goto cleanup;
-    fprintf(stdout, "Code size = %d\n", encrypted_code_len);
+        if (!buf)
+            goto cleanup;
+        fprintf(stdout, "Code size = %d\n", encrypted_code_len);
 #endif
-    val_result = receive_modules(n_socket);
+        val_result = receive_modules(n_socket);
 #ifdef DEBUG
-    if (val_error(val_result, 0, LOCATION, "Failed to receive modules", 1))
-        goto cleanup;
+        if (val_error(val_result, 0, LOCATION, "Failed to receive modules", 1))
+            goto cleanup;
 #endif
-    /* prepare the base lua file */
-    memset(fname, 0, 20);
-    sprintf(fname, "%d.lua", n_socket);
-    encrypted_file = fopen(fname, "w");
-    /* write the encrypted code buffer into the base lua file */
-    fwrite(buf, sizeof(char), encrypted_code_len, encrypted_file);
-    fclose(encrypted_file);
-    /* push the file name of the executable to sgx */
-    clock_gettime(CLOCK_REALTIME, &tsgx_start);
-	/* push the file name to lua. This will be the executable*/
-    ret = ecall_push_arg(unique_eid, fname, strlen(fname));
-    clock_gettime(CLOCK_REALTIME, &tsgx_stop);
-    sgx_time += get_time_diff(tsgx_stop, tsgx_start) / ns;
+        /* prepare the base lua file */
+        memset(fname, 0, 20);
+        sprintf(fname, "%d.lua", n_socket);
+        encrypted_file = fopen(fname, "w");
+        /* write the encrypted code buffer into the base lua file */
+        fwrite(buf, sizeof(char), encrypted_code_len, encrypted_file);
+        fclose(encrypted_file);
+        /* push the file name of the executable to sgx */
+        clock_gettime(CLOCK_REALTIME, &tsgx_start);
+        /* push the file name to lua. This will be the executable*/
+        ret = ecall_push_arg(unique_eid, fname, strlen(fname));
+        clock_gettime(CLOCK_REALTIME, &tsgx_stop);
+        sgx_time += get_time_diff(tsgx_stop, tsgx_start) / ns;
 #ifdef DEBUG
-    if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to push executable file", 1))
-        goto cleanup;
+        if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to push executable file", 1))
+            goto cleanup;
 #endif
-    clock_gettime(CLOCK_REALTIME, &texec_start);
-	/* Start executing the code */
-    execute_code_thread(unique_eid, n_socket);
-    clock_gettime(CLOCK_REALTIME, &texec_stop);
-    /*
-     * Start taking the results of the remote execution 
-     */
-    exec_time = get_time_diff(texec_stop, texec_start) / ns;
-    e2e_time += get_time_diff(texec_stop, te2e_start) / ns;   
-    /* benchmarking mode + i want prints */
-    if (disable_timer_print == 0) {
-		/* print network as well */
-		l_print_timers(1);
-	}
+        clock_gettime(CLOCK_REALTIME, &texec_start);
+        /* Start executing the code */
+        execute_code_thread(unique_eid, n_socket);
+        clock_gettime(CLOCK_REALTIME, &texec_stop);
+        /*
+         * Start taking the results of the remote execution 
+         */
+        exec_time = get_time_diff(texec_stop, texec_start) / ns;
+        e2e_time += get_time_diff(texec_stop, te2e_start) / ns;   
+        /* benchmarking mode + i want prints */
+        if (disable_timer_print == 0) {
+            /* print network as well */
+            l_print_timers(1);
+        }
 #ifdef DEBUG
     /* cleanup the connection info */
 cleanup:
 #endif
-	/* free resources here */
+    /* free resources here */
     if (buf)
         free(buf);
     buf = NULL;
     /* close the socket */
     close(new_socket);
-	/* clean the pending file descriptors */
+    /* clean the pending file descriptors */
     ocall_clean_fd();
-    }
     return NULL;
 }
