@@ -109,6 +109,7 @@ randombytes(unsigned char *a,unsigned char b)
 {
     sgx_read_rand(a, b);
 }
+
 /*
  * generate the public and private key of the server
  */
@@ -146,7 +147,7 @@ ecall_send_aes_key(int id)
 		randombytes(buffer, AES_KEY_SIZE);
 		/* copy the random key to our aes key */
 		for (k = 0; k < AES_KEY_SIZE; k++)
-		    p_key[0][k] = buffer[k];
+		    p_key[0][k] = (char)buffer[k];
     	/* encrypt the shared key and send it to the other party */
     	c = encrypt(buffer, (size_t)AES_KEY_SIZE, 
 				client_public_key, server_secret_key);

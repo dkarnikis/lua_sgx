@@ -57,7 +57,6 @@ lrecv_response(int sock, int *response_len)
     fflush(stdout);
     printf("Waiting response\n");
 #endif
-    printf("SOCK = %d\n", sock);
     /* receive the response len of the lua vm */
     recv_number(sock, response_len);
 #ifdef DEBUG
@@ -355,12 +354,9 @@ get_file_size(FILE *file)
     return size;
 }
 
-    void
-lsend_code(int sock, char *string, unsigned char *aes_key)
+void
+lsend_code(int sock, char *data, int size, unsigned char *aes_key)
 {
-    FILE *code;
-    int size;
-    char *data;
     char *encrypted;
     int a, l;
     unsigned int counted, copied;
@@ -371,20 +367,7 @@ lsend_code(int sock, char *string, unsigned char *aes_key)
     memset(&state, 0, sizeof (struct ctr_state));
     memset(iv, '5', 16);
     init_ctr(&state, iv);
-    /* read file contents */
-    code = fopen(string, "r");
-    if (code == NULL) {
-        printf("Cannot open file\n");
-        exit(EXIT_FAILURE);
-    }
-    /* get file size */
-    size = get_file_size(code);
-    /* alloc the data and encrypted buffer */
-    data = (char *)calloc(1, (size + 16) * sizeof(char));
-    encrypted = (char *) calloc(1, (size + 16) * sizeof(char));
-    /* copy file contents to buffer */
-    fread(data, sizeof(char), size, code);
-    fclose(code);
+    encrypted = (char *) calloc(1, (size + BUFSIZ) * sizeof(char));
     copied = 0;
     counted = size;
 #define MAX_COPY_SIZE BUFSIZ -1
@@ -411,8 +394,30 @@ lsend_code(int sock, char *string, unsigned char *aes_key)
     printf("Sending %d\n", size);
 #endif
     send_data(sock, encrypted, a);
-    free(data);
+//    free(data);
     free(encrypted);
+}
+
+void
+lsend_file_code(int sock, char *fname, unsigned char *aes_key)
+{
+    FILE *code;
+    int size;
+    char *data;
+    /* read file contents */
+    code = fopen(fname, "r");
+    if (code == NULL) {
+        printf("Cannot open file\n");
+        exit(EXIT_FAILURE);
+    }
+    /* get file size */
+    size = get_file_size(code);
+    /* alloc the data and encrypted buffer */
+    data = (char *)calloc(1, (size + 16) * sizeof(char));
+    /* copy file contents to buffer */
+    fread(data, sizeof(char), size, code);
+    fclose(code);
+    lsend_code(sock, data, size, aes_key);
 }
 
     void
@@ -509,7 +514,7 @@ main(int argc, char **argv)
     sock = lconnect(server_name, server_port);
     aes_key = lhandshake(sock);
     /* send the encrypted file */
-    lsend_code(sock, file_name, aes_key);
+    lsend_code(sock, file_name, strlen(file_name), aes_key);
 #ifdef DEBUG
     /* send the module number to the server */
     printf("Number of modules to send: " "%d\n", number_of_modules);
@@ -518,7 +523,7 @@ main(int argc, char **argv)
     /* send the modules to the server */
     for (i = 0; i < number_of_modules;i++){
         char *bob = strdup(module_array[i]);
-        lsend_code(sock, bob, aes_key);
+        lsend_file_code(sock, bob, aes_key);
 #if DEBUG
         printf("Sending module %s\n", bob);
 #endif
@@ -572,18 +577,32 @@ static int lua_recv_response(lua_State* L)
 static int lua_send_file(lua_State* L)
 {
     int sock = luaL_checkinteger(L, 1);
-    char *data = luaL_checkstring(L, 2);
+    char *fname = luaL_checkstring(L, 2);
     unsigned char *aes_key = luaL_checkstring(L, 3);
-    lsend_code(sock, data, aes_key);
+    lsend_file_code(sock, fname, aes_key);
+    send_int(sock, 0);
+    //lsend_code(int sock, char *string, unsigned char *aes_key)
+}
+
+
+static int lua_send_code(lua_State* L)
+{
+    int sock = luaL_checkinteger(L, 1);
+    char *data = strdup(luaL_checkstring(L, 2));
+    unsigned char *aes_key = luaL_checkstring(L, 3);
+    
+    lsend_code(sock, data, strlen(data), aes_key);
     send_int(sock, 0);
     //lsend_code(int sock, char *string, unsigned char *aes_key)
 
 }
 
+
 static luaL_Reg const foolib[] = {
     { "lconnect", lua_connect},
     { "lhandshake", lua_handshake},
     { "lsend_file", lua_send_file},
+    { "lsend_code", lua_send_code},
     { "ldecrypt", ldecrypt},
     { "lrecv_response", lua_recv_response},
     { 0, 0 }
