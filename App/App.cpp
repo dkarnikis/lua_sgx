@@ -243,6 +243,7 @@ spawn_lua_enclave(int n_socket)
 	 * secret AES key and send it to the server
 	 */
 	l_setup_client_handshake(unique_eid, n_socket);
+    while (1) {
         /* receive the code file from the client */
         buf = recv_file(n_socket, &encrypted_code_len);
 #ifdef DEBUG
@@ -286,6 +287,7 @@ spawn_lua_enclave(int n_socket)
             /* print network as well */
             l_print_timers(1);
         }
+    }
 #ifdef DEBUG
     /* cleanup the connection info */
 cleanup:

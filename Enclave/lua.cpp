@@ -576,51 +576,37 @@ int pmain (lua_State *L) {
   return 1;
 }
 
+const char *parse_string = \
+"json = dkjson.decode(json);"\
+"func = _G[json[1]](json[2]);"\
+"print(func);";
 
-    int 
-openf(lua_State *L)
-{
-    char const* const modname = lua_tostring(L, 1);
-    static const char writemod[] = 
-        "local mymath =  {} \
-        function mymath.add(a,b)\
-        print(a+b)\
-        end\
-        \
-        function mymath.sub(a,b)\
-        print(a-b)\
-        end\
-        function mymath.mul(a,b)\
-        print(a*b)\
-        end\
-        function mymath.div(a,b)\
-        print(a/b)\
-        end\
-        return mymath";
-    int res = luaL_loadbufferx(L, writemod, sizeof(writemod) -1, "mymath", "t");
-    /* Check if the call to luaL_loadbufferx was successful. */
-    if (res != LUA_OK) {
-        return lua_error(L);
-    }
-    lua_call(L, 0, 1);
-    return 1;
+static void fatal(const char* message) {
+  fprintf(stderr,"%s\n", message);
+  exit(EXIT_FAILURE);
 }
 
-    int
-main (int argc, char **argv)
+lua_State *L;
+
+void
+bootstrap_lua()
 {
-    lua_State* L = luaL_newstate();
+    L = luaL_newstate();
     luaL_openlibs(L);
-    luaL_requiref(L, "mymath", openf, 0);
     luaL_dofile(L, "bootstrap.lua");
     enclave_bootstrap = 0;
+}
+
+int
+main (int argc, char **argv)
+{
+    //luaL_dofile(L, "exec.lua");
     lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
     lua_pushinteger(L, argc);  /* 1st argument */
     lua_pushlightuserdata(L, argv); /* 2nd argument */
     lua_pcall(L, 2, 1, 0);  /* do the call */
-    lua_toboolean(L, -1);  /* get result */
-    //result = lua_toboolean(L, -1);  /* get result */
-    //luaL_dostring(L, "mymathmodule = require(\"mymath\");print(mymathmodule.add(1,2));print(a)");
-    //report(L, status);
-    lua_close(L); 
+    int a = luaL_dostring(L, parse_string);//json = dkjson.decode(json);print(findfunction(json[1])(json[2]))");
+    //lua_close(L); 
 }
+
+

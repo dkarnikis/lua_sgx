@@ -45,10 +45,8 @@ int getc_len = 0;
 char *getc_buffer = NULL;
 size_t total_alloced_bytes = 0;
 size_t total_freed_bytes = 0;
-/* synchronization stuff */
-volatile std::atomic<int> end_execution(0);                  /* clients request end of execution         */
 
-
+void bootstrap_lua();
 
 void
 print_key(const char *s, uint8_t *key, int size)
@@ -230,6 +228,7 @@ ecall_init(int arg, int di, FILE *stdi, FILE *stdo, FILE *stde)
 	argv[0] = (char *)lvm.c_str();
 	count++;
 	argc++;
+    bootstrap_lua();
 }
 
 /*

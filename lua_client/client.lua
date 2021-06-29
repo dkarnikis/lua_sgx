@@ -1,36 +1,43 @@
 lua_code = arg[1]
-functions = {}
+local functions = {}
 -- load  the libraries
-client = require('foo')
+local client = require('foo')
 local dkjson = require ("dkjson")
-server="127.0.0.1"
-port=8000
-socket=client.lconnect(server, port)
-aes_key = client.lhandshake(socket)
-
+local utils = require("utils")
+local config = utils.lines_from("config")
+local remote_servers = #config
+local task_counter = 0
 if lua_code == nil then
     print("Give a lua code")
     os.exit(1)
 end
 
+local function pick_worker() 
+    task_counter = task_counter + 1
+    return (task_counter % remote_servers) + 1
+end
+
 local function offload (...)
     local args = table.pack(...)
-    --func_name = table.remove(args, 1)
-    json = dkjson.encode(args, { indent = true})
+    local json = dkjson.encode(args, { indent = true})
     json = 'json = \'' .. json .. '\''
-    client.lsend_code(socket, json, aes_key);
-    res = client.lrecv_response(socket, aes_key);
-    io.write(res)
+    local wrk = pick_worker()
+    --local spawn_wrk = remote_worker()
+    local item = config[wrk]
+    client.lsend_code(item.socket, json, item.aes_key);
+    res = client.lrecv_response(item.socket, item.aes_key);
+    print(res)
+    return res
 end
 
 function wrapper (obj)
     if type(obj) == "function" then
-        --hooked_functions[obj] = true
         return function(...)
-            offload(functions[obj], ...)
             if run_local == true then
                 return obj(...)
             end
+
+            return offload(functions[obj], ...)
         end
     elseif type(obj) == "table" then
         for k,v in pairs(obj) do
