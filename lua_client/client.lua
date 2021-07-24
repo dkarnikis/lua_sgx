@@ -1,10 +1,14 @@
 lua_code = arg[1]
+mode = arg[2]
+
+print("Code File: ", lua_code)
+print("Encryption: ", mode)
 local functions = {}
 -- load  the libraries
 local client = require('foo')
 local dkjson = require ("dkjson")
 local utils = require("utils")
-local config = utils.lines_from("config")
+local config = utils.lines_from("config", mode)
 local remote_servers = #config
 local task_counter = 0
 if lua_code == nil then
@@ -24,8 +28,13 @@ local function offload (...)
     local wrk = pick_worker()
     --local spawn_wrk = remote_worker()
     local item = config[wrk]
-    client.lsend_code(item.socket, json, item.aes_key);
-    res = client.lrecv_response(item.socket, item.aes_key);
+    if mode == "0" then
+        client.lsend_code(item.socket, json); --, item.aes_key);
+        res = client.lrecv_response(item.socket);
+    else
+        client.lsend_code(item.socket, json, item.aes_key);
+        res = client.lrecv_response(item.socket, item.aes_key);
+    end
     print(res)
     return res
 end
@@ -50,4 +59,3 @@ end
 
 local run_local = false
 res = loadfile(lua_code)()
-

@@ -67,7 +67,7 @@ App_C_Flags := $(SGX_COMMON_CFLAGS) -pie -fPIE -fPIC  -Wno-attributes $(App_Incl
 
 
 App_Cpp_Flags := $(App_C_Flags) -std=c++11 -pie -fPIE -D_GLIBCXX_USE_CXX11_ABI=0 -pthread -Wall -fpermissive $(LUA_FLAGS)
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -pie -fPIE -D_GLIBCXX_USE_CXX11_ABI=0 -pthread $(LUA_FLAGS)
+App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -pie -fPIE -D_GLIBCXX_USE_CXX11_ABI=0 -pthread $(LUA_FLAGS) -L./ -ldlua
 
 ifneq ($(SGX_MODE), HW)
 	App_Link_Flags += -lsgx_uae_service_sim 
@@ -159,7 +159,7 @@ App/%.o: App/%.cpp
 	@echo "CXX <=  $<"
 
 $(App_Name): App/Enclave_u.o $(App_Cpp_Objects)
-	@$(CXX) $^ $(App_Link_Flags) -o $@ 
+	@$(CXX) $^ $(App_Link_Flags) -o $@  
 	@echo "LINK ->=>  $(App_Link_Flags)"
 
 

@@ -354,8 +354,20 @@ get_file_size(FILE *file)
     return size;
 }
 
+
+
+
 void
-lsend_code(int sock, char *data, int size, unsigned char *aes_key)
+lsend_code_plain(int sock, char *data, int size)
+{
+    send_int(sock, size);
+    send_data(sock, data, size);
+}
+
+
+
+void
+lsend_code_encrypted(int sock, char *data, int size, unsigned char *aes_key)
 {
     char *encrypted;
     int a, l;
@@ -370,6 +382,7 @@ lsend_code(int sock, char *data, int size, unsigned char *aes_key)
     encrypted = (char *) calloc(1, (size + BUFSIZ) * sizeof(char));
     copied = 0;
     counted = size;
+    
 #define MAX_COPY_SIZE BUFSIZ -1
     if (counted > MAX_COPY_SIZE) {
         while (counted > MAX_COPY_SIZE) {
@@ -394,7 +407,6 @@ lsend_code(int sock, char *data, int size, unsigned char *aes_key)
     printf("Sending %d\n", size);
 #endif
     send_data(sock, encrypted, a);
-//    free(data);
     free(encrypted);
 }
 
@@ -417,7 +429,7 @@ lsend_file_code(int sock, char *fname, unsigned char *aes_key)
     /* copy file contents to buffer */
     fread(data, sizeof(char), size, code);
     fclose(code);
-    lsend_code(sock, data, size, aes_key);
+    lsend_code_encrypted(sock, data, size, aes_key);
 }
 
     void
@@ -514,7 +526,7 @@ main(int argc, char **argv)
     sock = lconnect(server_name, server_port);
     aes_key = lhandshake(sock);
     /* send the encrypted file */
-    lsend_code(sock, file_name, strlen(file_name), aes_key);
+    lsend_code_encrypted(sock, file_name, strlen(file_name), aes_key);
 #ifdef DEBUG
     /* send the module number to the server */
     printf("Number of modules to send: " "%d\n", number_of_modules);
@@ -546,7 +558,11 @@ static int lua_connect(lua_State* L)
 {
     char *a = luaL_checkstring(L, 1);
     int n = luaL_checkinteger(L, 2);
+    int mode = luaL_checkinteger(L, 3);
     int sock = lconnect(a, n);
+    printf("Mode = %d\n", mode);
+    // are we using encryption
+    send_int(sock, mode);
     lua_pushinteger(L, sock);
     return 1;
 }
@@ -564,12 +580,18 @@ static int lua_recv_response(lua_State* L)
 {
     unsigned char *res;
     char *plain;
+    int argc = lua_gettop(L);
     int b = 0;
     int a = luaL_checkinteger(L, 1);
-    unsigned char *aes_key = luaL_checkstring(L, 2);
+    unsigned char *aes_key;
     res = lrecv_response(a, &b);
-    //response = ldecrypt(response, response_len, aes_key);
-    plain = ldecrypt(res, b, aes_key);
+    // we don't have encryption
+    if (argc == 1) {
+        plain = res;
+    } else {
+        aes_key = luaL_checkstring(L, 2);
+        plain = ldecrypt(res, b, aes_key);
+    }
     lua_pushstring(L, plain);
     return 1;
 }
@@ -581,20 +603,23 @@ static int lua_send_file(lua_State* L)
     unsigned char *aes_key = luaL_checkstring(L, 3);
     lsend_file_code(sock, fname, aes_key);
     send_int(sock, 0);
-    //lsend_code(int sock, char *string, unsigned char *aes_key)
 }
 
 
 static int lua_send_code(lua_State* L)
 {
+    int argc = lua_gettop(L);
     int sock = luaL_checkinteger(L, 1);
     char *data = strdup(luaL_checkstring(L, 2));
-    unsigned char *aes_key = luaL_checkstring(L, 3);
-    
-    lsend_code(sock, data, strlen(data), aes_key);
+    unsigned char *aes_key;
+    // we are not using encryption
+    if (argc == 2) {
+        lsend_code_plain(sock, data, strlen(data));
+    } else {
+        aes_key = luaL_checkstring(L, 3);
+        lsend_code_encrypted(sock, data, strlen(data), aes_key);
+    }
     send_int(sock, 0);
-    //lsend_code(int sock, char *string, unsigned char *aes_key)
-
 }
 
 
