@@ -21,7 +21,7 @@
 #include "lualib.h"
 
 extern FILE *output_file;
-
+extern int disable_execution_output;
 static int luaB_print (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */
   int i;
@@ -35,8 +35,10 @@ static int luaB_print (lua_State *L) {
     s = lua_tolstring(L, -1, &l);  /* get result */
     if (s == NULL)
       return luaL_error(L, "'tostring' must return a string to 'print'");
-    if (i>1) lua_writestring("\t", 1);
-    lua_writestring(s, l);
+    if (disable_execution_output == 0) { 
+        if (i>1) lua_writestring("\t", 1);
+        lua_writestring(s, l);
+    }
     if (output_file != NULL)  {
         if (i >1) 
         fwrite("\t", 1, strlen("\t"), output_file);
@@ -44,7 +46,7 @@ static int luaB_print (lua_State *L) {
     }
     lua_pop(L, 1);  /* pop result */
   }
-  lua_writeline();
+  //lua_writeline();
   return 0;
 }
 

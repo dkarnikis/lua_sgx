@@ -594,7 +594,8 @@ bootstrap_lua()
     L = luaL_newstate();
     luaL_openlibs(L);
     luaL_dofile(L, "bootstrap.lua");
-    enclave_bootstrap = 0;
+    // 0 uses e2e encryption, 1 is plain
+    //enclave_bootstrap = 0;
 }
 
 int

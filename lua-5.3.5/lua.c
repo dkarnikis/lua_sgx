@@ -670,14 +670,16 @@ bootstrap_lua()
 }
 
 int init = 0;
+int disable_execution_output = 0;
 
 int
-lua_main (int argc, char **argv)
+lua_main (int argc, char **argv, int d)
 {
     if (init == 0) {
         bootstrap_lua();
         init = 1;
     }
+    disable_execution_output = d;
     output_file = fopen("output", "w");
     //luaL_dofile(L, "exec.lua");
     lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */

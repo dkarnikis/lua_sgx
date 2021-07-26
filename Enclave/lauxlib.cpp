@@ -1018,7 +1018,6 @@ static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
 		void *ptr1;
 		ptr1 = realloc(ptr, nsize);
 		if (ptr1)
-			total_alloced_bytes += nsize;
 		return ptr1;
 	}
 }

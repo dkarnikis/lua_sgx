@@ -20,7 +20,7 @@ void *service_daemon(struct thread_data *data);
 void usage(void);
 void check_args(int port, short local_exec, char *input_file);
 void ocall_clean_fd(void);
-void *spawn_lua_enclave(int s);
+void *spawn_lua_enclave(int s, int le);
 
 sgx_enclave_id_t l_setup_local_enclave(int argc, char **argv, int i);
 void l_setup_client_handshake(sgx_enclave_id_t eid, int socket);

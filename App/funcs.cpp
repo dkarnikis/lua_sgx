@@ -10,7 +10,7 @@
 #define LOCATION __LINE__,__FILE__,__func__
 
 short keys_created = 0;
-
+extern short local_execution;
 double
 timespec_to_ns(struct timespec tp)
 {
@@ -120,7 +120,7 @@ l_setup_enclave()
         abort();
 #endif
     /* initialize lua VM arguments and stdio */
-    ret = ecall_init(unique_eid, single_enclave_instance, disable_execution_output, stdin, stdout, stdout);
+    ret = ecall_init(unique_eid, disable_execution_output, stdin, stdout, stdout);
 #ifdef DEBUG
     val_error(ret, SGX_SUCCESS, LOCATION, "Failed to initialize lua arguments", 0);
 #endif
@@ -131,6 +131,7 @@ l_setup_enclave()
     sgx_time = get_time_diff(tsgx_stop, tsgx_start) / ns;
     return unique_eid;
 }
+
 /*
  * Prints the usage message
  * Describe the usage of the new arguments you introduce
@@ -158,59 +159,6 @@ usage(void)
 	exit(EXIT_FAILURE);
 }
 
-void
-check_args(int port, short local_exec, char *input_file)
-{
-    
-    if (input_file == NULL && local_exec == 1 ){
-        fprintf(stdout, "File cannot be empty on local execution\n");
-        usage();
-    }
-	
-    if ((port <= 0 || port >= 65535) && local_exec == 0){
-        fprintf(stdout, "Port must be in range of 1 and 65535\n");
-        usage();
-    }
-    if (port > 0 && local_exec == 1){
-        fprintf(stdout, "Cannot run locally when port number is set\n");
-        usage();
-    }
-}
-
-sgx_enclave_id_t
-l_setup_local_enclave(int argc, char **argv, int i)
-{
-    sgx_status_t ret;
-    int updated;
-    sgx_enclave_id_t unique_eid;
-    sgx_launch_token_t token = {0};
-	(void)ret;
-    clock_gettime(CLOCK_REALTIME, &tsgx_start);
-    ret = sgx_create_enclave(enclave_path, SGX_DEBUG_FLAG, &token,
-            &updated, &unique_eid, NULL);
-#ifdef DEBUG
-    if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to create enclave", 1))
-        abort();
-#endif
-    /* initialize arguments and stdio */
-    ret = ecall_init(unique_eid, single_enclave_instance, disable_execution_output,
-                stdin, stdout, stdout);
-#ifdef DEBUG
-    val_error(ret, SGX_SUCCESS, LOCATION, "Failed to initialize lua arguments", 1);
-#endif
-    /* push arguments to lua */
-    for (;i < argc; i++) {
-        ret = ecall_push_arg(unique_eid, argv[i], strlen(argv[i]));
-#ifdef DEBUG
-        val_error(ret, SGX_SUCCESS, LOCATION, "Failed to push lua argument", 1);
-#endif
-    }
-    clock_gettime(CLOCK_REALTIME, &tsgx_stop);
-    return unique_eid;
-}
-
-
-
 /*
  * On encryption mode, setup the handshake with the client(Setup SGX keys, send 
  * the public key to client, get the public key of client, store it to SGX). 
@@ -228,16 +176,16 @@ l_setup_client_handshake(sgx_enclave_id_t eid, int n_socket)
     memset(client_public_key, 0, crypto_box_PUBLICKEYBYTES);
     memset(server_public_key, 0, crypto_box_PUBLICKEYBYTES);
     clock_gettime(CLOCK_REALTIME, &tsgx_start);
-	/* creates keys if we are on single enclave_instance */
-	if (keys_created == 0 || single_enclave_instance == 0) {
-		ret = ecall_gen_pkeys(eid);
+    /* creates keys if we are on single enclave_instance */
+    if (keys_created == 0) {// || single_enclave_instance == 0) {
+        ret = ecall_gen_pkeys(eid);
 #ifdef DEBUG
-		if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to gen server keys", 1))
-			goto cleanup;
-		fprintf(stdout, "Recieving client key\n");
+        if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to gen server keys", 1))
+            goto cleanup;
+        fprintf(stdout, "Recieving client key\n");
 #endif
-		keys_created = 1;
-	}
+        keys_created = 1;
+    }
     clock_gettime(CLOCK_REALTIME, &tsgx_stop);
     sgx_time += get_time_diff(tsgx_stop, tsgx_start) / ns;
     /* Receive the clients public Key */
@@ -298,19 +246,19 @@ l_print_timers(int print_nw)
 {
     if (print_nw == 0) {
         /* E2E means from the start of main to the end of code */
-        fprintf(stdout, "E2E       Time: %f\t", e2e_time);
+        fprintf(stdout, "E2E: %f ", e2e_time);
         /* exec refers to exec only without sgx init */
-        fprintf(stdout, "EXEC ONLY TIME: %f\t", exec_time);
+        fprintf(stdout, "EXEC: %f ", exec_time);
         /* time required for the sgx to init a new enclave and pass the lua args */
-        fprintf(stdout, "SGX INIT  Time: %f\n", sgx_time);
+        fprintf(stdout, "SGX: %f\n", sgx_time);
     } else {
         /* E2E means from the start of main to the end of code */
-        fprintf(stdout, "End2End 	TIME\t: %f\t", e2e_time);
+        fprintf(stdout, "E2E: %f\t", e2e_time);
         /* Network time */
-        fprintf(stdout, "NETWORK    TIME\t: %f\t", network_time);
+        fprintf(stdout, "NW: %f\t", network_time);
         /* exec refers to exec only without sgx init */
-        fprintf(stdout, "SGX INIT   TIME\t: %f\t", sgx_time);
+        fprintf(stdout, "INIT: %f\t", sgx_time);
         /* exec only time */
-        fprintf(stdout, "EXEC ONLY  TIME\t: %f\n", exec_time);
+        fprintf(stdout, "EXEC: %f\n", exec_time);
     }
 }

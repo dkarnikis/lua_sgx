@@ -1,6 +1,5 @@
 lua_code = arg[1]
 mode = arg[2]
-
 print("Code File: ", lua_code)
 print("Encryption: ", mode)
 local functions = {}
@@ -11,6 +10,7 @@ local utils = require("utils")
 local config = utils.lines_from("config", mode)
 local remote_servers = #config
 local task_counter = 0
+
 if lua_code == nil then
     print("Give a lua code")
     os.exit(1)
@@ -31,9 +31,12 @@ local function offload (...)
     if mode == "0" then
         client.lsend_code(item.socket, json); --, item.aes_key);
         res = client.lrecv_response(item.socket);
-    else
+    elseif mode == "1" then
         client.lsend_code(item.socket, json, item.aes_key);
         res = client.lrecv_response(item.socket, item.aes_key);
+    elseif mode == "2" then
+        client.lsend_code(item.socket, json); --, item.aes_key);
+        res = client.lrecv_response(item.socket);
     end
     print(res)
     return res
@@ -59,3 +62,4 @@ end
 
 local run_local = false
 res = loadfile(lua_code)()
+client.lclose_socket(config[1].socket)

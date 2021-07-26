@@ -90,7 +90,7 @@ send_number(int n_socket, int number)
 }
 
 ssize_t
-recv_number(int n_socket, int *number)
+recv_num(int n_socket, int *number)
 {
     ssize_t b;
 	b = l_read(n_socket, number, sizeof(int));
@@ -132,11 +132,10 @@ recv_data(int n_socket, char *buffer, int number)
 char *
 recv_file(int n_socket, int *s)
 {   
-#ifdef DEBUG
-    printf("Waiting for file size\n");
-#endif
     char *string;
-    recv_number(n_socket, s);
+    ssize_t b = recv_num(n_socket, s);
+    if (b == 0)
+        return NULL;
     string = (char *)calloc(1, ((int) *s) * sizeof(char));
     check_error(string, LOCATION, "Failed to allocate memory");
     if (recv_data(n_socket, string, *s) == -1)

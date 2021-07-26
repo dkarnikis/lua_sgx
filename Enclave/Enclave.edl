@@ -4,9 +4,8 @@ enclave {
                 include "../Enclave/sgx_structs.h"
                 include "../Enclave/sgx_includes.h"
                 /* define ECALLs here. */
-                public void ecall_execute(int id);
-                public void ecall_push_arg([in, size=1, count=sz] char *arg, unsigned long sz);
-		        public void ecall_init(int arg, int di, [user_check]\
+                public void ecall_execute(int id, int local_exec);
+		        public void ecall_init(int di, [user_check]\
                     FILE *stdi, [user_check] FILE *stdo, [user_check] FILE *stde);
                 public void ecall_register_client(int cid, [in, count=1, size=k] unsigned char *key, int k);
                 public void ecall_get_server_pkey([out, count=1, size=k] unsigned char *key, int k);

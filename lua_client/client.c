@@ -605,6 +605,11 @@ static int lua_send_file(lua_State* L)
     send_int(sock, 0);
 }
 
+static int lua_close_socket(lua_State* L)
+{
+    int sock = luaL_checkinteger(L, 1);
+    close (socket);
+}
 
 static int lua_send_code(lua_State* L)
 {
@@ -628,6 +633,7 @@ static luaL_Reg const foolib[] = {
     { "lhandshake", lua_handshake},
     { "lsend_file", lua_send_file},
     { "lsend_code", lua_send_code},
+    { "lclose_socket", lua_close_socket},
     { "ldecrypt", ldecrypt},
     { "lrecv_response", lua_recv_response},
     { 0, 0 }
