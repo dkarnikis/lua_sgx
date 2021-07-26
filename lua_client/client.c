@@ -560,7 +560,6 @@ static int lua_connect(lua_State* L)
     int n = luaL_checkinteger(L, 2);
     int mode = luaL_checkinteger(L, 3);
     int sock = lconnect(a, n);
-    printf("Mode = %d\n", mode);
     // are we using encryption
     send_int(sock, mode);
     lua_pushinteger(L, sock);
@@ -608,7 +607,8 @@ static int lua_send_file(lua_State* L)
 static int lua_close_socket(lua_State* L)
 {
     int sock = luaL_checkinteger(L, 1);
-    close (socket);
+    shutdown(sock, 2);
+    close (sock);
 }
 
 static int lua_send_code(lua_State* L)

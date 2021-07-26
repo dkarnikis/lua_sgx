@@ -236,7 +236,6 @@ ecall_execute(int id, int local_exec)
     int server_response_len;
     char *response;
     char *first_data;                   /* code of client to be read from server */
-	long unsigned int i;
     response = first_data = NULL;
     count = 1;
     char **argv;                            /* the actual arguments of lua              */
@@ -308,7 +307,7 @@ fwrite(const void *buffer, size_t size, size_t cont, FILE *fd)
     res = cont * size;
     if (fd == stdout)
         server_response.append((char *)buffer);
-    /* print output enabled */
+    // print output enabled
     if (disable_execution_output == 0 || (disable_execution_output == 1 && fd != stdout))
         ocall_fwrite(&res, buffer, size, cont, fd);
     return res;

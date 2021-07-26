@@ -184,7 +184,7 @@ l_setup_client_handshake(sgx_enclave_id_t eid, int n_socket)
             goto cleanup;
         fprintf(stdout, "Recieving client key\n");
 #endif
-        keys_created = 1;
+        //keys_created = 1;
     }
     clock_gettime(CLOCK_REALTIME, &tsgx_stop);
     sgx_time += get_time_diff(tsgx_stop, tsgx_start) / ns;
@@ -253,11 +253,11 @@ l_print_timers(int print_nw)
         fprintf(stdout, "SGX: %f\n", sgx_time);
     } else {
         /* E2E means from the start of main to the end of code */
-        fprintf(stdout, "E2E: %f\t", e2e_time);
+        fprintf(stdout, "E2E: %f ", e2e_time);
         /* Network time */
-        fprintf(stdout, "NW: %f\t", network_time);
+        fprintf(stdout, "NW: %f ", network_time);
         /* exec refers to exec only without sgx init */
-        fprintf(stdout, "INIT: %f\t", sgx_time);
+        fprintf(stdout, "INIT: %f ", sgx_time);
         /* exec only time */
         fprintf(stdout, "EXEC: %f\n", exec_time);
     }

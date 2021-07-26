@@ -132,6 +132,7 @@ recv_data(int n_socket, char *buffer, int number)
 char *
 recv_file(int n_socket, int *s)
 {   
+    clock_gettime(CLOCK_REALTIME, &te2e_start);
     char *string;
     ssize_t b = recv_num(n_socket, s);
     if (b == 0)

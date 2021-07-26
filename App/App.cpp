@@ -87,6 +87,14 @@ execute_code_thread(long unsigned int eid, int n_socket, int local_exec)
 }
 
 
+void
+send_timers(char timer_data[100], int n_socket)
+{
+    memset(timer_data, '\0', 100);
+    sprintf(timer_data, "%.3f %.3f %.3f %.3f", e2e_time, network_time, sgx_time, exec_time);
+    ocall_send_packet(timer_data, 100, n_socket);
+}
+
 extern "C" int lua_main(int argc, char **argv, int deo);
 int
 main (int argc, char **argv)
@@ -132,7 +140,7 @@ main (int argc, char **argv)
 		enclave_path = strdup("enclave.signed.so");
 #ifdef DEBUG
 	// check if enclave file do not exist
-	i = access(enclave_path, F_OK);
+	int i = access(enclave_path, F_OK);
 	if (i == -1) {
 		perror("Invalid enclave path");
 		abort();
@@ -140,7 +148,11 @@ main (int argc, char **argv)
 #endif
 	// spawn our socket
 	welcome_socket = l_create_socket(server_port);
+start1:
+//    clock_gettime(CLOCK_REALTIME, &tsgx_start);
     unique_eid = l_setup_enclave();
+//    clock_gettime(CLOCK_REALTIME, &tsgx_stop);
+//    sgx_time = get_time_diff(tsgx_stop, tsgx_start) / ns;
 start:
     // accept the new connection
     new_socket = l_accept(welcome_socket);
@@ -149,12 +161,15 @@ start:
     if (encryption_mode == 0) {
         // execute on the lua vm
         spawn_lua_og(new_socket);
+        goto start;
     } else if (encryption_mode == 1) {
+        sgx_time = 0;
         spawn_lua_enclave(new_socket, 0);
+        goto start;
     } else if (encryption_mode == 2) {
         spawn_lua_enclave(new_socket, 1);
+        goto start1;
     }
-goto start;
     free(input_file);
     free(enclave_path);
 }
@@ -226,6 +241,7 @@ spawn_lua_enclave(int n_socket, int local_mode)
     int encrypted_code_len;                 /* encrypted len from the client    */
     char *buf;                              /* encrypted code for the client    */
     int val_result;                         /* result value of calls            */
+    char timer_data[100];
     /* init the values */
     network_time = exec_time = 0.0f;
     (void)ret;
@@ -243,11 +259,17 @@ spawn_lua_enclave(int n_socket, int local_mode)
     if (local_mode == 0) {
         l_setup_client_handshake(unique_eid, n_socket);
     }
+    e2e_time = 0;
     while (buf = recv_file(n_socket, &encrypted_code_len)) { 
-        clock_gettime(CLOCK_REALTIME, &te2e_start);
-        e2e_time = 0;
+        if (local_mode == 1) {
+            clock_gettime(CLOCK_REALTIME, &tsgx_start);
+            unique_eid = l_setup_enclave();
+            clock_gettime(CLOCK_REALTIME, &tsgx_stop);
+            sgx_time = get_time_diff(tsgx_stop, tsgx_start) / ns;
+        } else {
+            sgx_time = 0;
+        }
         network_time = 0;
-        sgx_time = 0;
 
 #ifdef DEBUG
         if (!buf)
@@ -266,6 +288,13 @@ spawn_lua_enclave(int n_socket, int local_mode)
         clock_gettime(CLOCK_REALTIME, &texec_start);
         // Start executing the code
         execute_code_thread(unique_eid, n_socket, local_mode);
+        // on local, destroy the enclave and get time
+        if (local_mode == 1) {
+            clock_gettime(CLOCK_REALTIME, &tsgx_start);
+            sgx_destroy_enclave(unique_eid);
+            clock_gettime(CLOCK_REALTIME, &tsgx_stop);
+            sgx_time += get_time_diff(tsgx_stop, tsgx_start) / ns;
+        }
         clock_gettime(CLOCK_REALTIME, &texec_stop);
         // Start taking the results of the remote execution 
         exec_time = get_time_diff(texec_stop, texec_start) / ns;
@@ -274,22 +303,16 @@ spawn_lua_enclave(int n_socket, int local_mode)
             /* print network as well */
             l_print_timers(1);
         }
+        send_timers(timer_data, n_socket);
+        ocall_clean_fd();
     }
 #ifdef DEBUG
     /* cleanup the connection info */
 cleanup:
 #endif
-    /* free resources here */
-    if (buf)
-        free(buf);
-    buf = NULL;
-    /* close the socket */
     close(new_socket);
-    /* clean the pending file descriptors */
-    ocall_clean_fd();
     return NULL;
 }
-
 
 /*
  * instatiates a lua VM enclave for each new client.
@@ -310,11 +333,11 @@ spawn_lua_og(int n_socket)
     network_time = exec_time = 0.0f;
     (void)val_result;
     FILE *file;
+    char timer_data[100];
     buf = NULL;
     file = NULL;
+    e2e_time = 0;
     while (buf = recv_file(n_socket, &code_len)) { 
-        clock_gettime(CLOCK_REALTIME, &te2e_start);
-        e2e_time = 0;
         network_time = 0;
         sgx_time = 0;
 
@@ -340,7 +363,6 @@ spawn_lua_og(int n_socket)
         clock_gettime(CLOCK_REALTIME, &texec_start);
         // Start executing the code
         lua_main(2, argv, disable_execution_output);
-        clock_gettime(CLOCK_REALTIME, &texec_stop);
         // Start taking the results of the remote execution 
         // read the output data
         output_file = fopen("output", "r");
@@ -349,6 +371,8 @@ spawn_lua_og(int n_socket)
         fread(output_data, 1, output_size, output_file);
         fclose(output_file);
         ocall_send_packet(output_data, output_size + 1, n_socket);
+        clock_gettime(CLOCK_REALTIME, &texec_stop);
+        // construct the timer data 
         free(buf);
         free(output_data);
         free(argv[0]);
@@ -358,6 +382,11 @@ spawn_lua_og(int n_socket)
             /* print network as well */
             l_print_timers(1);
         }
+        send_timers(timer_data, n_socket);
     }
+#ifdef DEBUG
+cleanup:
+#endif
+    close(n_socket);
     return NULL;
 }

@@ -18,7 +18,7 @@ function utils.lines_from(file, mode)
         local port = func()
         local sock = client.lconnect(server, port, mode)
         -- we have encryption
-        if mode == "1" then
+        if mode == 1 then
             local aes_key = client.lhandshake(sock)
             lines[#lines + 1] = 
             {
