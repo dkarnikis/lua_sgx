@@ -1,13 +1,17 @@
 local client = require('foo')
+utils = require("utils")
 package.path = package.path .. ";../libs/?.lua"
 dkjson = require("dkjson")
 -- load  the libraries
-
 lua_code = arg[1]
 mode = 1 --tonumber(arg[2])
 functions = {}
 results = {}
-current_tag = nil
+tags = {}
+tags[0] = "Lua_Remote"
+tags[1] = "SGX_Remote"
+tags[2] = "SGX_Local" 
+current_tag = tags[mode]
 --utils = require("utils")
 --config = utils.lines_from("config", mode)
 --local remote_servers = #config
@@ -16,6 +20,16 @@ if lua_code == nil then
     print("Give a lua code")
     os.exit(1)
 end
+
+function connect_to_worker(m)
+    mode = m
+    config = utils.lines_from("config", mode)
+end
+
+function close_worker(sock)
+    client.lclose_socket(sock)
+end
+
 
 local function pick_worker() 
     task_counter = task_counter + 1
