@@ -24,6 +24,7 @@ if pcall(require, "jit.opt") then
     require("jit.opt").start("maxmcode=8000", "maxtrace=5000")
 end
 
+package.path = package.path .. ";libs/?.lua"
 local Vector = require'som'.Vector
 local MIN_X = 0.0
 local MIN_Y = 0.0
@@ -928,14 +929,12 @@ function cd:verify_result (actual_collisions, num_aircrafts)
         return false
     end
 end
-
-end -- object cd
-
-function run_iter(n)
+--
+function cd.run_iter(n)
     local result = cd:benchmark(n)
     assert(result > 0)
     return result
 end
+return cd
+end -- object cd
 
-
-run_iter(tonumber(io.read()))

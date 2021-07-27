@@ -1,11 +1,13 @@
+local client = require('foo')
+package.path = package.path .. ";../libs/?.lua"
+dkjson = require("dkjson")
+-- load  the libraries
+
 lua_code = arg[1]
 mode = 1 --tonumber(arg[2])
 functions = {}
 results = {}
 current_tag = nil
--- load  the libraries
-local client = require('foo')
-local dkjson = require ("dkjson")
 --utils = require("utils")
 --config = utils.lines_from("config", mode)
 --local remote_servers = #config
@@ -48,28 +50,34 @@ local function offload (...)
         init = reg(),
         exec = reg()
     }
-    local fname = args[1]
+    local fname = args[1] .. '.' .. args[2]
     table.insert(results[fname][current_tag], obj)
     return res
 end
 
-function wrapper (obj)
+function wrapper (obj, lib_name)
     if type(obj) == "function" then
         return function(...)
-            local fname = functions[obj]
+            local fname = lib_name .. '.' ..functions[obj]
             if results[fname] == nil then
                 results[fname] = {}
                 results[fname]["Lua_Remote"] = {} 
                 results[fname]["SGX_Local"]  = {} 
                 results[fname]["SGX_Remote"] = {} 
             end
-            res = offload(fname, ...)
+            res = offload(lib_name, functions[obj], ...)
             return res
         end
     elseif type(obj) == "table" then
+        local lib_name = 0
+        for k,v in pairs(_G) do
+            if v == obj then
+                lib_name = k
+            end
+        end
         for k,v in pairs(obj) do
             functions[v] = k
-            obj[k] = wrapper(v)
+            obj[k] = wrapper(v, lib_name)
         end 
     end
     return obj

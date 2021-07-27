@@ -16,18 +16,25 @@ function lines_from(file)
     return lines
 end
 
+function getf_from_lib(lib, f) 
+    for k,v in pairs(lib) do
+        if k == f then
+            return v
+        end
+    end
+    return nil
+end
 
 -- tests the functions above
-local file = 'config'
+local file = 'lib_config'
 local lines = lines_from(file)
-
 -- print all line numbers and their contents
 for k,v in pairs(lines) do
-    --print('line[' .. k .. ']', v)
     local command = v .. " = require('libs/" .. v .. "');"
     load(command)()
     -- push it to the global scope 
     for k1,v1 in pairs(_G[v]) do
-        _G[k1] = v1
+        _G[k] = v
     end
 end
+

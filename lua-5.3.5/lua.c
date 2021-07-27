@@ -648,11 +648,11 @@ int main (int argc, char **argv) { return lua_vm(argc, argv);}
 
 
 
-
 const char *parse_string = \
 "json = dkjson.decode(json);"\
-"func = _G[json[1]](json[2]);"\
-"print(func);";
+"local f = getf_from_lib(_G[json[1]], json[2]);"\
+"print(f(json[3]));";
+
 
 static void fatal(const char* message) {
   fprintf(stderr,"%s\n", message);
@@ -666,7 +666,10 @@ bootstrap_lua()
 {
     L = luaL_newstate();
     luaL_openlibs(L);
-    luaL_dofile(L, "bootstrap.lua");
+    int err = luaL_dofile(L, "bootstrap.lua");
+    if (err != 0) {
+        printf("--> %s\n", lua_tostring(L, -1));
+    }
 }
 
 int init = 0;
@@ -686,7 +689,11 @@ lua_main (int argc, char **argv, int d)
     lua_pushinteger(L, argc);  /* 1st argument */
     lua_pushlightuserdata(L, argv); /* 2nd argument */
     lua_pcall(L, 2, 1, 0);  /* do the call */
-    int a = luaL_dostring(L, parse_string);//json = dkjson.decode(json);print(findfunction(json[1])(json[2]))");
-    //lua_close(L); 
+    //int a = luaL_dostring(L, parse_string);//json = dkjson.decode(json);print(findfunction(json[1])(json[2]))");
+
+    int err = luaL_dostring(L, parse_string);
+    if (err != 0) {
+        printf("--> %s\n", lua_tostring(L, -1));
+    }
     fclose(output_file);
 }

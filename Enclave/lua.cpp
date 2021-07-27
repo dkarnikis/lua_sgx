@@ -576,10 +576,11 @@ int pmain (lua_State *L) {
   return 1;
 }
 
+
 const char *parse_string = \
 "json = dkjson.decode(json);"\
-"func = _G[json[1]](json[2]);"\
-"print(func);";
+"local f = getf_from_lib(_G[json[1]], json[2]);"\
+"print(f(json[3]));";
 
 static void fatal(const char* message) {
   fprintf(stderr,"%s\n", message);
@@ -593,9 +594,11 @@ bootstrap_lua()
 {
     L = luaL_newstate();
     luaL_openlibs(L);
-    luaL_dofile(L, "bootstrap.lua");
     // 0 uses e2e encryption, 1 is plain
-    //enclave_bootstrap = 0;
+    int err = luaL_dofile(L, "bootstrap.lua");
+    if (err != 0) {
+        printf("--> %s\n", lua_tostring(L, -1));
+    }
 }
 
 int
@@ -606,8 +609,11 @@ main (int argc, char **argv)
     lua_pushinteger(L, argc);  /* 1st argument */
     lua_pushlightuserdata(L, argv); /* 2nd argument */
     lua_pcall(L, 2, 1, 0);  /* do the call */
-    int a = luaL_dostring(L, parse_string);//json = dkjson.decode(json);print(findfunction(json[1])(json[2]))");
-    //lua_close(L); 
+    int err = luaL_dostring(L, parse_string);
+    if (err != 0) {
+        printf("--> %s\n", lua_tostring(L, -1));
+    }
+
 }
 
 
