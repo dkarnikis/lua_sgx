@@ -1,22 +1,37 @@
 package.path = package.path .. ";../libs/?.lua"
+package.path = package.path .. ";../libs/crypto/?.lua"
+package.path = package.path .. ";../libs/heavy/?.lua"
+package.path = package.path .. ";../libs/medium/?.lua"
+package.path = package.path .. ";../libs/light/?.lua"
 function load_libs() 
     -- first load the libraries in the _G
     -- heavy 
-    binarytrees   = require("binarytrees")
-    havlak        = require("havlak")
-    recursive_fib = require("recursive_fib")
-    nbody         = require("nbody")
+    binarytrees     = require("binarytrees")
+    havlak          = require("havlak")
+    recursive_fib   = require("recursive_fib")
+    nbody           = require("nbody")
     -- medium 
-    cd            = require("cd")
-    fasta         = require("fasta")
-    ray           = require("ray")
-    richards      = require("richards")
+    cd              = require("cd")
+    fasta           = require("fasta")
+    ray             = require("ray")
+    richards        = require("richards")
     -- light
-    deltablue     = require("deltablue")
-    life          = require("life")
-    mandelbrot    = require("mandelbrot")
-    queens        = require("queens")
-
+    deltablue       = require("deltablue")
+    life            = require("life")
+    mandelbrot      = require("mandelbrot")
+    queens          = require("queens")
+    -- crypto
+    blake2b         = require("blake2b")
+    chacha20        = require("chacha20")
+    checksum        = require("checksum")
+    md5             = require("md5")
+    norx            = require("norx")
+    norx32          = require("norx32")
+    rabbit          = require("rabbit")
+    rc4             = require("rc4")
+    salsa20         = require("salsa20")
+    sha2            = require("sha2")
+    xtea            = require("xtea")
     -- after they have been loaded, we wrap them
     binarytrees     = wrapper(binarytrees)
     havlak          = wrapper(havlak)
@@ -32,6 +47,18 @@ function load_libs()
     life            = wrapper(life)
     mandelbrot      = wrapper(mandelbrot)
     queens          = wrapper(queens)
+    -- crypto 
+    blake2b         = wrapper(blake2b)
+    chacha20        = wrapper(chacha20)
+    checksum        = wrapper(checksum)
+    md5             = wrapper(md5)
+    norx            = wrapper(norx)
+    norx32          = wrapper(norx32)
+    rabbit          = wrapper(rabbit)
+    rc4             = wrapper(rc4)
+    salsa20         = wrapper(salsa20)
+    sha2            = wrapper(sha2)
+    xtea            = wrapper(xtea)
 end
 
 function do_bench(func, lib_func, func_name, m, data)
@@ -107,11 +134,29 @@ end
 
 
 load_libs()
---do_light(100)
-do_medium(100)
---do_heavy(40)
+function do_algo()
+    do_light(100)
+    do_medium(100)
+    do_heavy(40)
+end
 
---local data = string.rep('x', 10000)
+function do_crypto(data)
+    do_remote(blake2b.hash, 'blake2b.hash', 'blake2b', data)
+    do_remote(chacha20.run, 'chacha20.run', 'chacha20', data)
+    do_remote(checksum.crc32, 'checksum.crc32', 'checksum', data)
+    do_remote(md5.hash, 'md5.hash', 'md5', data)
+    do_remote(norx.run, 'norx.run', 'norx', data)
+    do_remote(norx32.run, 'norx32.run', 'norx32', data)
+    do_remote(rabbit.run, 'rabbit.run', 'rabbit', data)
+    do_remote(rc4.run, 'rc4.run', 'rc4', data)
+    do_remote(salsa20.run, 'salsa20.run', 'salsa20', data)
+    do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
+    do_remote(sha2.sha512, 'sha2.sha512', 'sha512', data)
+    do_remote(xtea.run, 'xtea.run', 'xtea', data)
+end
 
+local data = string.rep('x', 1000000)
+do_algo()
+do_crypto(data)
 --do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
 

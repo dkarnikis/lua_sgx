@@ -29,6 +29,10 @@ unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
 sgx_aes_ctr_128bit_key_t p_key[16];
 unsigned char *enc;
 short size = 0;
+/*
+ * 1 = read everything without decrypting. Is used for local execution or
+ * for bootstraping the lua instance for local/remote
+ */
 int enclave_bootstrap = 1;
 /* the current user id */
 int current_user_id = 420;
@@ -308,7 +312,8 @@ fwrite(const void *buffer, size_t size, size_t cont, FILE *fd)
     if (fd == stdout)
         server_response.append((char *)buffer);
     // print output enabled
-    if (disable_execution_output == 0 || (disable_execution_output == 1 && fd != stdout))
+    // on remote opts, dont print anything
+    if (enclave_bootstrap == 1) //enclave_boodisable_execution_output == 0 || (disable_execution_output == 1 && fd != stdout))
         ocall_fwrite(&res, buffer, size, cont, fd);
     return res;
 }
@@ -451,7 +456,7 @@ fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
      * and the the rest
      */
     ocall_fread(&a, ptr, size, nmemb, stream);
-    /* if we did not read anything, skip */
+    // if we did not read anything, skip or if we are running locally
     if (a == 0 || enclave_bootstrap == 1) 
         return a;	
     // we are in encryption mode, decrypt the buffer

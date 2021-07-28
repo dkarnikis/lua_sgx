@@ -654,10 +654,6 @@ const char *parse_string = \
 "print(f(json[3]));";
 
 
-static void fatal(const char* message) {
-  fprintf(stderr,"%s\n", message);
-  exit(EXIT_FAILURE);
-}
 
 lua_State *L;
 
@@ -669,6 +665,7 @@ bootstrap_lua()
     int err = luaL_dofile(L, "bootstrap.lua");
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
+        abort();
     }
 }
 
@@ -694,6 +691,7 @@ lua_main (int argc, char **argv, int d)
     int err = luaL_dostring(L, parse_string);
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
+        abort();
     }
     fclose(output_file);
 }

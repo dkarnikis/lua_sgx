@@ -1,3 +1,6 @@
+package.path = package.path .. ";libs/?.lua"
+package.path = package.path .. ";libs/crypto/?.lua"
+
 -- see if the file exists
 function file_exists(file)
     local f = io.open(file, "rb")
@@ -30,11 +33,11 @@ local file = 'lib_config'
 local lines = lines_from(file)
 -- print all line numbers and their contents
 for k,v in pairs(lines) do
-    local command = v .. " = require('libs/" .. v .. "');"
+    local name, path = v:match("([^:]+):([^:]+)")
+    local command = name .. " = require('libs/" .. path .. "');"
     load(command)()
     -- push it to the global scope 
-    for k1,v1 in pairs(_G[v]) do
-        _G[k] = v
+    for k1,v1 in pairs(_G[name]) do
+        _G[k] = name
     end
 end
-

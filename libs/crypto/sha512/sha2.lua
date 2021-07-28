@@ -1,5 +1,11 @@
-local string, assert = string, assert
 local spack, sunpack = string.pack, string.unpack 
+
+------------------------------------------------------------------------
+-- sha256
+
+-- Initialize table of round constants
+-- (first 32 bits of the fractional parts of the cube roots of the first
+-- 64 primes 2..311)
 local k256 = {
    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -37,10 +43,12 @@ local function sha256 (msg)
 	local k = k256
 	local w = ww256
 	local mlen = #msg
+  	-- Process the message in successive 512-bit (64 bytes) chunks:
 	for i = 1, mlen, 64 do
 		w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], 
 		w[9], w[10], w[11], w[12], w[13], w[14], w[15], w[16]
 		= sunpack(">I4I4I4I4I4I4I4I4I4I4I4I4I4I4I4I4", msg, i)
+		-- mix msg block in state
 		for j = 17, 64 do
 			local x = w[j - 15]; x = (x << 32) | x
 			local y = w[j - 2]; y = (y << 32) | y
@@ -49,6 +57,7 @@ local function sha256 (msg)
 				+ w[j - 7] + w[j - 16]  ) & 0xffffffff
 		end
 		local a, b, c, d, e, f, g, h = h1, h2, h3, h4, h5, h6, h7, h8
+		-- main state permutation
 		for j = 1, 64 do
 			e = (e << 32) | (e & 0xffffffff)
 			local t1 = ((e >> 6) ~ (e >> 11) ~ (e >> 25))
@@ -73,6 +82,7 @@ local function sha256 (msg)
 		h7 = h7 + g 
 		h8 = h8 + h 
 	end
+	-- clamp hash to 32-bit words
 	h1 = h1 & 0xffffffff
 	h2 = h2 & 0xffffffff
 	h3 = h3 & 0xffffffff
@@ -81,8 +91,13 @@ local function sha256 (msg)
 	h6 = h6 & 0xffffffff
 	h7 = h7 & 0xffffffff
 	h8 = h8 & 0xffffffff
+	-- return hash as a binary string
 	return spack(">I4I4I4I4I4I4I4I4", h1, h2, h3, h4, h5, h6, h7, h8)
 end --sha256
+
+------------------------------------------------------------------------
+-- sha512
+
 local k512 = {
 0x428a2f98d728ae22,0x7137449123ef65cd,0xb5c0fbcfec4d3b2f,0xe9b5dba58189dbbc,
 0x3956c25bf348b538,0x59f111f1b605d019,0x923f82a4af194f9b,0xab1c5ed5da6d8118,
@@ -126,10 +141,14 @@ local function sha512 (msg)
 	local k = k512
 	local w = ww512 -- 80 * i64 state
 	local mlen = #msg
+  	-- Process the message as 128-byte blocks:
+	-- (this is borrowed to Egor Skriptunoff's pure_lua_SHA2
+	-- https://github.com/Egor-Skriptunoff/pure_lua_SHA2)
 	for i = 1, mlen, 128 do
 		w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], 
 		w[9], w[10], w[11], w[12], w[13], w[14], w[15], w[16]
 		= sunpack(">i8i8i8i8i8i8i8i8i8i8i8i8i8i8i8i8", msg, i)
+		-- mix msg block in state
 
 		for j = 17, 80 do
 			local a = w[j-15]
@@ -139,6 +158,7 @@ local function sha512 (msg)
 			  + w[j-7] + w[j-16]
 		end
 		local a, b, c, d, e, f, g, h = h1, h2, h3, h4, h5, h6, h7, h8
+		-- main state permutation
 		for j = 1, 80 do
 			local z = (e >> 14 ~ e >> 18 ~ e >> 41 ~ e << 23 
 				   ~ e << 46 ~ e << 50) 
@@ -163,9 +183,14 @@ local function sha512 (msg)
 		h7 = h7 + g 
 		h8 = h8 + h 
 	end
+	-- return hash as a binary string
 	return spack(">i8i8i8i8i8i8i8i8", h1, h2, h3, h4, h5, h6, h7, h8)
 end --sha512
+
+------------------------------------------------------------------------
+
 return {
   sha256 = sha256,
   sha512 = sha512,
 }
+

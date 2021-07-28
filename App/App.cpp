@@ -149,10 +149,7 @@ main (int argc, char **argv)
 	// spawn our socket
 	welcome_socket = l_create_socket(server_port);
 start1:
-//    clock_gettime(CLOCK_REALTIME, &tsgx_start);
     unique_eid = l_setup_enclave();
-//    clock_gettime(CLOCK_REALTIME, &tsgx_stop);
-//    sgx_time = get_time_diff(tsgx_stop, tsgx_start) / ns;
 start:
     // accept the new connection
     new_socket = l_accept(welcome_socket);

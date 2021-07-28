@@ -580,13 +580,7 @@ int pmain (lua_State *L) {
 const char *parse_string = \
 "json = dkjson.decode(json);"\
 "local f = getf_from_lib(_G[json[1]], json[2]);"\
-"io.write(f(json[3]));";
-
-static void fatal(const char* message) {
-  fprintf(stderr,"%s\n", message);
-  exit(EXIT_FAILURE);
-}
-
+"print(f(json[3]));";
 lua_State *L;
 
 void
@@ -598,6 +592,7 @@ bootstrap_lua()
     int err = luaL_dofile(L, "bootstrap.lua");
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
+        abort();
     }
 }
 
@@ -612,6 +607,7 @@ main (int argc, char **argv)
     int err = luaL_dostring(L, parse_string);
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
+        abort();
     }
 
 }

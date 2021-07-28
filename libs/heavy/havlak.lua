@@ -1,6 +1,5 @@
-
 local Vector = require'som'.Vector
-local Set = require'som'.Set
+local Set = require 'som'.Set
 local IdentitySet = require'som'.IdentitySet
 local IdentityDictionary = require'som'.IdentityDictionary
 
