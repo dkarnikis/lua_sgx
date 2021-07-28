@@ -23,30 +23,112 @@
 // Lua modules 
 #include <lua.h>
 #include <lauxlib.h>
+#define KEY_SIZE 16
+#define CHUNK_LEN 4096
 
-uint8_t secret[16];         /* the shared encryption key */
-struct ctr_state
+typedef struct content Content;
+void randombytes(unsigned char *x,unsigned long long xlen);
+
+void
+decrypt(unsigned char *key, Content encrypted_buffer, unsigned char *client_public_key, unsigned char *server_secret_key)
 {
-    unsigned char ivec[16];
-    unsigned int num;
-    unsigned char ecount[16];
-};
+    unsigned char nonce[crypto_box_NONCEBYTES];
+    unsigned char *encrypted, *message;
+    long esize;
+    Content c;
+    randombytes(nonce, sizeof(nonce));
+    memset(nonce, 0, crypto_box_NONCEBYTES);
+    c = encrypted_buffer;
+    memcpy(nonce, c.bytes, crypto_box_NONCEBYTES);
+    esize = c.size - crypto_box_NONCEBYTES + crypto_box_BOXZEROBYTES;
+    encrypted = malloc(esize);
+    if (encrypted == NULL)
+        perror("Malloc failed!");
+    memset(encrypted, 0, crypto_box_BOXZEROBYTES);
+    memcpy(encrypted + crypto_box_BOXZEROBYTES,
+        c.bytes + crypto_box_NONCEBYTES, c.size - crypto_box_NONCEBYTES);
+    // Equivalently, esize - crypto_box_BOXZEROBYTES
+    free(c.bytes);
+    // Output
+    message = calloc(esize, sizeof(unsigned char));
+    if (message == NULL)
+        perror("Calloc failed!");
+    // Encrypt
+    crypto_box_open(message, encrypted, esize,
+        nonce, client_public_key, server_secret_key);
+    free(encrypted);
+    memcpy(key, &message[crypto_box_ZEROBYTES], (int)(esize - crypto_box_ZEROBYTES));
+    free(message);
+}
+
+
+
+
 
 void recv_shared_key(int sock, uint8_t *key, int size);
 void send_client_public(int sock, uint8_t *key, int size);
-int fdecrypt(unsigned int len, char *cipher, char *text, const unsigned char *enc_key, 
-        struct ctr_state *state);
 void recv_number(int sock, int *num);
 
 
 
-void output_key(char *str, unsigned char key[], int key_size);
-unsigned char iv[16] = {5};
-unsigned char *decrypt(unsigned char *key, Content encrypted_buffer, unsigned char *client_public_key, unsigned char *server_secret_key);
-void init_ctr(struct ctr_state *state, const unsigned char iv[16]);
-int fencrypt(char *text, char *cipher, const unsigned char *enc_key, struct ctr_state *state, unsigned int buffer_size);
 void usage(void);
 void check_args(int port, char *server, char *input, int nom, int mc);
+
+
+
+
+/*
+ * decrypt the incoming code from the client using AES
+ */
+unsigned char *
+code_decrypt(unsigned char *str, size_t len, unsigned char *encryption_key)
+{
+    unsigned char n[crypto_stream_NONCEBYTES];
+    unsigned char *cipher;
+    cipher = (unsigned char *)calloc(len, sizeof(unsigned char) + 1);
+    memset(n, 0, crypto_stream_NONCEBYTES);
+    crypto_stream_xor(cipher, str, len, n, encryption_key);
+    cipher[len] = '\0';
+    return cipher;
+}
+
+/*
+ * Same function for encryption/decryption
+ */
+unsigned char *
+encrypt_chunk(unsigned char *enc, size_t data_size, unsigned char *aes_key)
+{
+    size_t len, rx_bytes;
+    unsigned char *plain_text, *cipher;
+    len = CHUNK_LEN;
+    rx_bytes = 0;
+    plain_text = (unsigned char *)calloc(1, data_size);
+    while (rx_bytes != data_size) {
+        if ((rx_bytes + len) > data_size) {
+            len = data_size - rx_bytes;
+        }
+        cipher =  code_decrypt(&enc[rx_bytes], len, aes_key);
+        memcpy(&plain_text[rx_bytes], cipher, len);
+        rx_bytes += len;
+        cipher[len] = '\0';
+#ifdef DEBUG
+        printf("|%.*s|\n", len, cipher);
+#endif
+        free(cipher);
+    }
+    //printf("||||||%.*s||||||\n", data_size, plain_text);
+    return plain_text;
+}
+
+
+
+
+
+
+
+
+
+
 
     char *
 lrecv_response(int sock, int *response_len)
@@ -73,38 +155,61 @@ lrecv_response(int sock, int *response_len)
 }
 
 unsigned char *
+recv_data(int *data_size, int socket_fd)
+{
+    unsigned char *data;
+    int rx_bytes, tmp_bytes;
+    rx_bytes = tmp_bytes = 0;
+    read(socket_fd, data_size, sizeof(int));
+    data = calloc(*data_size, sizeof(unsigned char));
+    while (rx_bytes != *data_size) {
+        //write(socket_fd, &var, sizeof(size_t));
+        tmp_bytes = read(socket_fd, &data[rx_bytes], (*data_size-rx_bytes));
+        rx_bytes += tmp_bytes;
+    }
+    return data;
+}
+
+
+unsigned char *
 lhandshake(int sock)
 {
-    int i;
-    Content c;
+
+
+    
+
+    Content c1, c2;
     unsigned char *aes_key;
+    aes_key = (unsigned char *)malloc(2 * KEY_SIZE * sizeof(unsigned char));
     unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
     unsigned char server_public_key[crypto_box_PUBLICKEYBYTES];
     unsigned char client_secret_key[crypto_box_SECRETKEYBYTES];
     memset(client_public_key, 0, crypto_box_PUBLICKEYBYTES);
     memset(client_secret_key, 0, crypto_box_SECRETKEYBYTES);
     memset(server_public_key, 0, crypto_box_PUBLICKEYBYTES);
-    aes_key = (unsigned char *)calloc(16, sizeof(unsigned char));
-    /* generate the keys please */
+   
     crypto_box_keypair(client_public_key, client_secret_key);
     /* send shared key */
     send_client_public(sock, client_public_key, crypto_box_PUBLICKEYBYTES);
-#ifdef DEBUG
-    print_key("Public Key: ", client_public_key, crypto_box_PUBLICKEYBYTES);
-#endif
-    /* receive shared key */
     recv_shared_key(sock, server_public_key, crypto_box_PUBLICKEYBYTES);
-#ifdef DEBUG
-    printf("Received server pkey\n");
-#endif
-    /* receive the keysize */
-    read(sock, &i, sizeof(int));
-    c.size = i;
-    /* allocate the buffer to store the key */
-    c.bytes = calloc(1, c.size);
-    /* receive shared key */
-    read(sock, c.bytes, c.size);
-    decrypt(aes_key, c, server_public_key, client_secret_key);
+    int a, b;
+    a = b = 0;
+    c1.bytes = recv_data(&a, sock);
+    //__print_key("Encryption key", c1.bytes, c1.size);
+    c2.bytes = recv_data(&b, sock);
+    c1.size = a;
+    c2.size = b;
+    unsigned char enc_key1[KEY_SIZE];
+    unsigned char enc_key2[KEY_SIZE];
+    memset(enc_key1, '\0', KEY_SIZE);
+    memset(enc_key2, '\0', KEY_SIZE);
+    decrypt(enc_key1, c1, server_public_key, client_secret_key);
+    decrypt(enc_key2, c2, server_public_key, client_secret_key);
+    memcpy(&aes_key[0], enc_key1, KEY_SIZE);
+    memcpy(&aes_key[16], enc_key2, KEY_SIZE);
+    
+    //__print_key("Encryption key", aes_key, KEY_SIZE * 2);
+
     return aes_key;
 }
 
@@ -112,19 +217,7 @@ char *
 ldecrypt(char *response, size_t response_len, unsigned char *aes_key)
 {
     int i;
-    struct ctr_state state;
-    char *response_plain;
-    /* reinit the aes keys and ciphrers */
-    memset(&state, 0, sizeof (struct ctr_state));
-    memset(iv, '5', 16);
-    init_ctr(&state, iv);
-    /* allocate space for the decrypted results */
-    /* decrypt the data */
-    response_plain = (char *)calloc(1, sizeof(char) * (response_len + 16));
-    fdecrypt(response_len, response, response_plain, aes_key, &state);
-    response_plain[response_len] = '\0';
-    free(response);
-    return response_plain;
+    return NULL;
 }
 
 int
@@ -178,17 +271,17 @@ send_int(int sock, int size)
     }
 }
 
-    void
-send_data(int sock, char *data, int size)
+void
+send_data(int socket_fd, unsigned char *data, int data_size)
 {
-    int sent;
-    int t;
-    sent = t = 0;
-    while (sent != size) {
-        t = write(sock, &data[sent], size-sent);
-        if (t == -1)
-            abort();
-        sent += t;
+    int rx_bytes, tmp_bytes;
+    rx_bytes = tmp_bytes = 0;
+    write(socket_fd, &data_size, sizeof(int));
+    while (rx_bytes != data_size) {
+        //write(socket_fd, &var, sizeof(size_t));
+        tmp_bytes = write(socket_fd, &data[rx_bytes], (data_size-rx_bytes));
+        //__print_key(&data[rx_bytes], data_size-rx_bytes);
+        rx_bytes += tmp_bytes;
     }
 }
 
@@ -216,133 +309,6 @@ recv_number(int sock, int *num)
     }
 }
 
-    int
-fdecrypt(unsigned int len, char *cipher, char *text, const unsigned char *enc_key, 
-        struct ctr_state *state)
-{   
-    AES_KEY key;
-    unsigned char indata[AES_BLOCK_SIZE]; 
-    unsigned char outdata[AES_BLOCK_SIZE];
-    int offset;
-    memset(indata, 0, AES_BLOCK_SIZE);
-    memset(outdata, 0, AES_BLOCK_SIZE);
-    memset(&key, 0, sizeof(AES_KEY));
-    offset = 0;
-    if (AES_set_encrypt_key(enc_key, 128, &key) < 0){
-        fprintf(stderr, "Could not set decryption key.");
-        exit(1);
-    }
-    while (1) {
-        memcpy(indata, cipher+offset, AES_BLOCK_SIZE);  
-        CRYPTO_ctr128_encrypt(indata, outdata, AES_BLOCK_SIZE, &key, state->ivec, 
-                state->ecount, &state->num, (block128_f)AES_encrypt);
-        memcpy(text+offset, outdata, AES_BLOCK_SIZE); 
-        offset = offset+AES_BLOCK_SIZE;
-        if (offset > len){
-            break;
-        }
-    }
-    return offset;
-}
-
-/*
- * Initialize the iv
- */
-    void
-init_ctr(struct ctr_state *state, const unsigned char iv[16])
-{
-    /* 
-     * aes_ctr128_encrypt requires 'num' and 'ecount' set to zero on the
-     * first call. 
-     */
-    state->num = 0;
-    memset(state->ecount, 0, 16);
-    /* Copy IV into 'ivec' */
-    memcpy(state->ivec, iv, 16);
-}
-
-/*
- * performs encryption on plaintext and returns the size of encrypted bytes
- */
-    int
-fencrypt(char* text, char* cipher, const unsigned char* enc_key, struct ctr_state* state, unsigned int buffer_size)
-{
-    init_ctr(state, iv);
-    AES_KEY key;
-    unsigned int offset;
-    unsigned char indata[AES_BLOCK_SIZE];
-    unsigned char outdata[AES_BLOCK_SIZE];
-    memset(indata, 0, AES_BLOCK_SIZE);
-    memset(outdata, 0, AES_BLOCK_SIZE);
-    memset(&key, 0, sizeof(AES_KEY));
-    offset = 0;
-    /* Initializing the encryption KEY */
-    if (AES_set_encrypt_key(enc_key, 128, &key) < 0){
-        printf("Error Could not set encryption key.");
-        exit(EXIT_FAILURE);
-    }
-    while(1){
-        memcpy(indata, text+offset, AES_BLOCK_SIZE);
-        CRYPTO_ctr128_encrypt(indata, outdata, AES_BLOCK_SIZE, &key, state->ivec,\
-                state->ecount, &state->num, (block128_f)AES_encrypt);
-        memcpy(cipher+offset, outdata, AES_BLOCK_SIZE);
-        offset=offset+AES_BLOCK_SIZE;
-        if (offset > buffer_size){
-            break;
-        }
-    }
-    return offset;
-}
-
-    void
-usage()
-{
-    printf(
-            "\n"
-            "Usage:\n"
-            "   app -p port -s server_ip -i code [-e -r -w][a]\n"
-            "   app -h\n"
-          );
-    printf(
-            "\n"
-            "Options:\n"
-            " -p    port    Port for the server to listen to\n"
-            " -s    ip      The ip of the server to connect\n" 
-            " -i    file    The code to send to the server\n" 
-            " -n    num     The number of modules to provide\n" 
-            " -m    files   The provided modules code\n" 
-            " -r			Loads the keys from keys.txt\n"
-            " -w			Writes the keys to keys.txt\n"
-            " -e            Encrypted mode\n" 
-            " -h            This help message\n"
-          );
-    exit(EXIT_FAILURE);
-    abort();
-}
-
-/*
- * check the validity of arguments
- */
-    void
-check_args(int port, char *server, char *input, int nom, int mc)
-{
-    if(port <= 0){
-        fprintf(stdout, "Port number must be positive\n");
-        usage();
-    }
-    if(!server){
-        fprintf(stdout, "Server cannot be empty\n");
-        usage();
-    }
-    if(!input){
-        fprintf(stdout, "Input file cannot be empty\n");
-        usage();
-    }
-    if(nom > 0 && mc != nom){
-        fprintf(stdout, "Number of modules must be the same with the number of modules provides\n");
-        usage();   
-    }
-}
 
     int
 get_file_size(FILE *file)
@@ -357,56 +323,13 @@ get_file_size(FILE *file)
 
 
 
-void
-lsend_code_plain(int sock, char *data, int size)
-{
-    send_int(sock, size);
-    send_data(sock, data, size);
-}
-
-
 
 void
 lsend_code_encrypted(int sock, char *data, int size, unsigned char *aes_key)
 {
-    char *encrypted;
-    int a, l;
-    unsigned int counted, copied;
-    struct ctr_state state;
-    a = l = 0;
-    counted = copied = 0;
-    /* reinit the aes keys and ciphrers */
-    memset(&state, 0, sizeof (struct ctr_state));
-    memset(iv, '5', 16);
-    init_ctr(&state, iv);
-    encrypted = (char *) calloc(1, (size + BUFSIZ) * sizeof(char));
-    copied = 0;
-    counted = size;
-    
-#define MAX_COPY_SIZE BUFSIZ -1
-    if (counted > MAX_COPY_SIZE) {
-        while (counted > MAX_COPY_SIZE) {
-            a =+ fencrypt(&data[l], &encrypted[copied] , aes_key, &state, MAX_COPY_SIZE);
-            //printf("Writing (%d-%d)\n", l, MAX_COPY_SIZE+l);
-            copied += MAX_COPY_SIZE+1;
-            l+= MAX_COPY_SIZE + 1;
-            counted -= MAX_COPY_SIZE;
-        }
-        a += fencrypt(&data[l], &encrypted[l], aes_key, &state, counted);
-    } else {
-        a += fencrypt(&data[0], &encrypted[0], aes_key, &state, counted);
-    }
-#ifdef DEBUG
-    printf("Bytes to send = %d\n", counted);
-#endif 
-    if (counted > MAX_COPY_SIZE){}
-    else
-        a = size;
-    send_int(sock, a);
-#ifdef DEBUG
-    printf("Sending %d\n", size);
-#endif
-    send_data(sock, encrypted, a);
+
+    unsigned char *encrypted = encrypt_chunk(data, size, aes_key);
+    send_data(sock, encrypted, size);
     free(encrypted);
 }
 
@@ -429,11 +352,14 @@ lsend_file_code(int sock, char *fname, unsigned char *aes_key)
     /* copy file contents to buffer */
     fread(data, sizeof(char), size, code);
     fclose(code);
-    lsend_code_encrypted(sock, data, size, aes_key);
+    if (aes_key == NULL)
+        send_data(sock, data, size);
+    else
+        lsend_code_encrypted(sock, data, size, aes_key);
 }
 
     void
-send_encrypted_string(int sock, char *string)
+send_string(int sock, char *string)
 {
 #if defined(DEBUG)
     printf("Opening %s\n", string);
@@ -449,7 +375,7 @@ send_encrypted_string(int sock, char *string)
 }
 
     void
-print_key(char *str, uint8_t *key, int size)
+__print_key(char *str, uint8_t *key, int size)
 {
     int i;
     printf("%s = ", str);
@@ -469,90 +395,6 @@ RNG(uint8_t *dest, unsigned size)
     return 1;
 }
 
-    int
-main(int argc, char **argv)
-{
-    char *server_name;          /* server to send the lua           */
-    char *response;             /* the encrypted response           */
-    char *file_name;            /* the filename                     */
-    char **module_array;        /* the module filename array        */
-    char *response_plain;       /* the decrypted response           */
-    int response_len;           /* the len of the reponse   data    */
-    int i;                      /* counter                          */
-    int module_counter;         /* how many counters do we send     */
-    int number_of_modules;      /* module counter                   */
-    int server_port;            /* server port to connect to        */
-    int sock;                   /* socket descriptor                */
-    int opt;                    /* used for getopt                  */
-    unsigned char *aes_key;
-    /* init */
-    aes_key = NULL;
-    module_array = NULL;
-    module_counter = 0;
-    number_of_modules = 0;
-    response_len = 0;
-    server_port = 0;
-    file_name = NULL;
-    server_name = NULL;
-    srand(time(0));
-    while ((opt = getopt(argc, argv, "p:s:i:n:m:h")) != -1){
-        switch(opt) {
-            case 'p':
-                server_port = atoi(optarg);
-                break;
-            case 's':
-                server_name = strdup(optarg);
-                break;
-            case 'i':
-                file_name = strdup(optarg);
-                break;
-            case 'n':
-                number_of_modules = atoi(optarg);
-                module_array = (char **)calloc(number_of_modules, sizeof(char *));
-                break;
-            case 'm':
-                if(number_of_modules == -1)
-                    usage();
-                module_array[module_counter] = strdup(optarg);
-                module_counter++;
-                break;
-            case 'h':
-            default:
-                usage();
-        }
-    }
-    /* check arguments */
-    check_args(server_port, server_name, file_name, number_of_modules, module_counter);
-    sock = lconnect(server_name, server_port);
-    aes_key = lhandshake(sock);
-    /* send the encrypted file */
-    lsend_code_encrypted(sock, file_name, strlen(file_name), aes_key);
-#ifdef DEBUG
-    /* send the module number to the server */
-    printf("Number of modules to send: " "%d\n", number_of_modules);
-#endif
-    send_int(sock, number_of_modules);
-    /* send the modules to the server */
-    for (i = 0; i < number_of_modules;i++){
-        char *bob = strdup(module_array[i]);
-        lsend_file_code(sock, bob, aes_key);
-#if DEBUG
-        printf("Sending module %s\n", bob);
-#endif
-        send_encrypted_string(sock, basename(bob));
-        free(bob);
-    }
-    //response = lrecv_response(sock);
-    free(response);
-    free(file_name);
-    free(server_name);
-    fflush(stdout);
-    shutdown(sock, 2);
-    close(sock);
-    return 1;
-}
-
-
 
 static int lua_connect(lua_State* L)
 {
@@ -571,7 +413,7 @@ static int lua_handshake(lua_State* L)
     unsigned char *aes_key;
     int n = luaL_checkinteger(L, 1);
     aes_key = lhandshake(n);
-    lua_pushlstring(L, aes_key, 16);
+    lua_pushlstring(L, aes_key, KEY_SIZE * 2);
     return 1;
 }
 
@@ -589,19 +431,36 @@ static int lua_recv_response(lua_State* L)
         plain = res;
     } else {
         aes_key = luaL_checkstring(L, 2);
-        plain = ldecrypt(res, b, aes_key);
+        plain = encrypt_chunk(res, b, aes_key);
     }
     lua_pushstring(L, plain);
     return 1;
 }
 
-static int lua_send_file(lua_State* L)
+static int lua_send_module(lua_State* L)
 {
+    int argc = lua_gettop(L);
     int sock = luaL_checkinteger(L, 1);
+    unsigned char *aes_key = NULL;
+    if (argc == 1) {
+        send_int(sock, 0);
+        return 0;
+    } else 
+        send_int(sock, 1);
+    if (argc == 3)
+        aes_key = luaL_checkstring(L, 3);
+
+
     char *fname = luaL_checkstring(L, 2);
-    unsigned char *aes_key = luaL_checkstring(L, 3);
+    // if we have 3 args, we are using encryption, fetch the key
     lsend_file_code(sock, fname, aes_key);
-    send_int(sock, 0);
+    send_string(sock, fname);
+
+
+//    // we are sending 1 module 
+//    send_int(sock, 1);
+//    lsend_file_code(sock, fname, aes_key);
+//    send_string(sock, basename(fname));
 }
 
 static int lua_close_socket(lua_State* L)
@@ -616,25 +475,24 @@ static int lua_send_code(lua_State* L)
     int argc = lua_gettop(L);
     int sock = luaL_checkinteger(L, 1);
     char *data = strdup(luaL_checkstring(L, 2));
-    unsigned char *aes_key;
+    unsigned char *aes_key = NULL;
     // we are not using encryption
     if (argc == 2) {
-        lsend_code_plain(sock, data, strlen(data));
+        send_data(sock, data, strlen(data));
     } else {
         aes_key = luaL_checkstring(L, 3);
         lsend_code_encrypted(sock, data, strlen(data), aes_key);
     }
-    send_int(sock, 0);
+    //send_int(sock, 0);
 }
 
 
 static luaL_Reg const foolib[] = {
     { "lconnect", lua_connect},
     { "lhandshake", lua_handshake},
-    { "lsend_file", lua_send_file},
+    { "lsend_module", lua_send_module},
     { "lsend_code", lua_send_code},
     { "lclose_socket", lua_close_socket},
-    { "ldecrypt", ldecrypt},
     { "lrecv_response", lua_recv_response},
     { 0, 0 }
 };

@@ -228,7 +228,7 @@ extern int crypto_sign_ed25519_tweet_keypair(unsigned char *,unsigned char *);
 #define crypto_stream_NONCEBYTES crypto_stream_xsalsa20_NONCEBYTES
 #define crypto_stream_IMPLEMENTATION crypto_stream_xsalsa20_IMPLEMENTATION
 #define crypto_stream_VERSION crypto_stream_xsalsa20_VERSION
-#define crypto_stream_xsalsa20_tweet_KEYBYTES 32
+#define crypto_stream_xsalsa20_tweet_KEYBYTES 16
 #define crypto_stream_xsalsa20_tweet_NONCEBYTES 24
 extern int crypto_stream_xsalsa20_tweet(unsigned char *,unsigned long long,const unsigned char *,const unsigned char *);
 extern int crypto_stream_xsalsa20_tweet_xor(unsigned char *,const unsigned char *,unsigned long long,const unsigned char *,const unsigned char *);

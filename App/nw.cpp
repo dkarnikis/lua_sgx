@@ -74,11 +74,9 @@ l_accept(int welcome_socket)
     int a;
     a = accept(welcome_socket, (struct sockaddr *) &server_st,
         &addr_size);
-    if (a == -1)
-        perror("XDD");
 #ifdef DEBUG
-        if (valc_error(a, 0, LOCATION, "Accept failed", 1))
-            abort();
+    if (valc_error(a, 0, LOCATION, "Accept failed", 1))
+        abort();
 #endif
     return a;
 }
@@ -114,14 +112,14 @@ send_public_key(int n_socket, uint8_t *key, int size)
 ssize_t
 recv_data(int n_socket, char *buffer, int number)
 {
-    ssize_t rx_bytes;
-    ssize_t tmp_bytes;
+    int rx_bytes;
+    int tmp_bytes;
     rx_bytes = 0;
     tmp_bytes = 0;
-    while (rx_bytes < (ssize_t)number) {
-        tmp_bytes = l_read(n_socket, &buffer[rx_bytes], (int)(number-rx_bytes));
+    while (rx_bytes < number) {
+        tmp_bytes = l_read(n_socket, &buffer[rx_bytes], (number-rx_bytes));
 #ifdef DEBUG
-        if (valc_error((int)tmp_bytes, 0, LOCATION, "Error receiving packet", 1))
+        if (valc_error(tmp_bytes, 0, LOCATION, "Error receiving packet", 1))
             return -1;
 #endif
         rx_bytes += tmp_bytes;
@@ -137,7 +135,7 @@ recv_file(int n_socket, int *s)
     ssize_t b = recv_num(n_socket, s);
     if (b == 0)
         return NULL;
-    string = (char *)calloc(1, ((int) *s) * sizeof(char));
+    string = (char *)calloc(1, ((int) *s) * sizeof(char) + 1);
     check_error(string, LOCATION, "Failed to allocate memory");
     if (recv_data(n_socket, string, *s) == -1)
         abort();
@@ -148,25 +146,20 @@ recv_file(int n_socket, int *s)
  * function that sends encrypted data to a socket 
  */
 void
-ocall_send_packet(unsigned char *pkt, int len, int new_socket)
+ocall_send_packet(int n_socket, unsigned char *pkt, size_t len)
 {
     ssize_t rx_bytes;
     ssize_t tmp_bytes;
     rx_bytes = 0;
     tmp_bytes = 0;
-#if 0
-    if (new_sock == -1) {
-		abort();
-        new_sock = new_socket;
-    } else
-        new_socket = new_sock;
-#endif
-    if (send_number(new_socket, len) == -1) {
+#if 1
+    if (send_number(n_socket, (int)len) == -1) {
         check_error(NULL, LOCATION, "Failed to send packet to the client");
         exit(EXIT_FAILURE);
     }
+#endif
     while (rx_bytes != (ssize_t)len) {
-        tmp_bytes = l_write(new_socket, &pkt[rx_bytes], (int)(len-rx_bytes));
+        tmp_bytes = l_write(n_socket, &pkt[rx_bytes], (int)(len-rx_bytes));
         rx_bytes += tmp_bytes;
     }
 }

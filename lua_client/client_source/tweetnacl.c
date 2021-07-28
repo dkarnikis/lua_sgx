@@ -7,7 +7,22 @@ typedef unsigned long u32;
 typedef unsigned long long u64;
 typedef long long i64;
 typedef i64 gf[16];
-extern void randombytes(u8 *,u64);
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <time.h>
+/* it's really stupid that there isn't a syscall for this */
+
+void randombytes(unsigned char *x,unsigned long long xlen)
+{
+    size_t i;
+    for (i = 0; i < xlen; i++)
+    {
+        x[i] = rand();
+    }
+}
 
 static const u8
   _0[16],

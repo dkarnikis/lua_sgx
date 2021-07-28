@@ -27,3 +27,4 @@ rc4:crypto/rc4
 xtea:crypto/xtea
 salsa20:crypto/salsa20
 rabbit:crypto/rabbit
+opt:opti/opt

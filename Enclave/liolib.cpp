@@ -523,7 +523,6 @@ static void read_all (lua_State *L, FILE *f) {
 #if 1
   do {  /* read file in chunks of LUAL_BUFFERSIZE bytes */
 	char *p = luaL_prepbuffsize(&b, tmp);//LUAL_BUFFERSIZE1);
-	
     nr = fread(p, sizeof(char), tmp, f);
     luaL_addsize(&b, nr);
   } while (nr == (tmp));

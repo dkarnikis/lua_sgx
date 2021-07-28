@@ -46,11 +46,9 @@ char *strcat(char *dst, const char *src);
 int fscanf(FILE *stream, const char *format, double *d);
 void print_num(size_t s);
 void perror(const char *s);
-void randombytes(unsigned char *a,unsigned char b);
 char *strdup(char *src);
-void *sgx_alloc(size_t);
-void sgx_free(void *);
 FILE *popen(const char *a, const char *b);
+void randombytes(unsigned char *a, unsigned char b);
 int pclose(FILE *f);
 char *read_code_data(char *fname, int *size, int id);
 /* the function to perform the dh encryption */

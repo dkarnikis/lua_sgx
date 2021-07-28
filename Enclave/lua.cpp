@@ -592,6 +592,7 @@ bootstrap_lua()
     int err = luaL_dofile(L, "bootstrap.lua");
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
+        fflush(stdout);
         abort();
     }
 }
@@ -607,6 +608,7 @@ main (int argc, char **argv)
     int err = luaL_dostring(L, parse_string);
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
+        fflush(stdout);
         abort();
     }
 

@@ -92,7 +92,7 @@ send_timers(char timer_data[100], int n_socket)
 {
     memset(timer_data, '\0', 100);
     sprintf(timer_data, "%.3f %.3f %.3f %.3f", e2e_time, network_time, sgx_time, exec_time);
-    ocall_send_packet(timer_data, 100, n_socket);
+    ocall_send_packet(n_socket, timer_data, 100);
 }
 
 extern "C" int lua_main(int argc, char **argv, int deo);
@@ -148,6 +148,7 @@ main (int argc, char **argv)
 #endif
 	// spawn our socket
 	welcome_socket = l_create_socket(server_port);
+
 start1:
     unique_eid = l_setup_enclave();
 start:
@@ -160,10 +161,14 @@ start:
         spawn_lua_og(new_socket);
         goto start;
     } else if (encryption_mode == 1) {
+        // sgx opts with encryption
         sgx_time = 0;
+
         spawn_lua_enclave(new_socket, 0);
-        goto start;
+        sgx_destroy_enclave(unique_eid);
+        goto start1;
     } else if (encryption_mode == 2) {
+        // sgx local without encryption
         spawn_lua_enclave(new_socket, 1);
         goto start1;
     }
@@ -253,9 +258,15 @@ spawn_lua_enclave(int n_socket, int local_mode)
 	 * Store the key in the Enclave, generate the 
 	 * secret AES key and send it to the server
 	 */
+
     if (local_mode == 0) {
         l_setup_client_handshake(unique_eid, n_socket);
     }
+    val_result = receive_modules(n_socket);
+#ifdef DEBUG
+    if (val_error(val_result, 0, LOCATION, "Failed to receive modules", 1))
+        goto cleanup;
+#endif
     e2e_time = 0;
     while (buf = recv_file(n_socket, &encrypted_code_len)) { 
         if (local_mode == 1) {
@@ -272,11 +283,6 @@ spawn_lua_enclave(int n_socket, int local_mode)
         if (!buf)
             goto cleanup;
         fprintf(stdout, "Code size = %d\n", encrypted_code_len);
-#endif
-        val_result = receive_modules(n_socket);
-#ifdef DEBUG
-        if (val_error(val_result, 0, LOCATION, "Failed to receive modules", 1))
-            goto cleanup;
 #endif
         encrypted_file = fopen(code_file, "w");
         /* write the encrypted code buffer into the base lua file */
@@ -333,8 +339,14 @@ spawn_lua_og(int n_socket)
     char timer_data[100];
     buf = NULL;
     file = NULL;
+    // receive the dependency modules for this execution
+    val_result = receive_modules(n_socket);
+#ifdef DEBUG
+    if (val_error(val_result, 0, LOCATION, "Failed to receive modules", 1))
+        goto cleanup;
+#endif
     e2e_time = 0;
-    while (buf = recv_file(n_socket, &code_len)) { 
+    while (buf = recv_file(n_socket, &code_len)) {
         network_time = 0;
         sgx_time = 0;
 
@@ -343,11 +355,6 @@ spawn_lua_og(int n_socket)
         if (!buf)
             goto cleanup;
         fprintf(stdout, "Code size = %d\n", code_len);
-#endif
-        val_result = receive_modules(n_socket);
-#ifdef DEBUG
-        if (val_error(val_result, 0, LOCATION, "Failed to receive modules", 1))
-            goto cleanup;
 #endif
         char *argv[3];
         argv[0] = strdup("lua");
@@ -367,7 +374,7 @@ spawn_lua_og(int n_socket)
         output_data = (char *)calloc(1, output_size + 1);
         fread(output_data, 1, output_size, output_file);
         fclose(output_file);
-        ocall_send_packet(output_data, output_size + 1, n_socket);
+        ocall_send_packet(n_socket, output_data, output_size + 1);
         clock_gettime(CLOCK_REALTIME, &texec_stop);
         // construct the timer data 
         free(buf);

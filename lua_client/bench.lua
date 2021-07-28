@@ -3,6 +3,11 @@ package.path = package.path .. ";../libs/crypto/?.lua"
 package.path = package.path .. ";../libs/heavy/?.lua"
 package.path = package.path .. ";../libs/medium/?.lua"
 package.path = package.path .. ";../libs/light/?.lua"
+package.path = package.path .. ";../libs/opti/?.lua"
+default_loops = 5
+local loops = default_loops
+-- the module name we are going to offload
+local module_file_name = nil
 function load_libs() 
     -- first load the libraries in the _G
     -- heavy 
@@ -32,6 +37,8 @@ function load_libs()
     salsa20         = require("salsa20")
     sha2            = require("sha2")
     xtea            = require("xtea")
+    -- opts
+    opt             = require("opt")
     -- after they have been loaded, we wrap them
     binarytrees     = wrapper(binarytrees)
     havlak          = wrapper(havlak)
@@ -59,12 +66,31 @@ function load_libs()
     salsa20         = wrapper(salsa20)
     sha2            = wrapper(sha2)
     xtea            = wrapper(xtea)
+    -- opts
+    opt             = wrapper(opt)
+    
+end
+
+function send_modules(wrk)
+    -- if we did not supply an input, don't send anything
+    if module_file_name == nil then
+        client.lsend_module(wrk.socket);
+    elseif wrk.aes_key == nil then
+    -- we have an input, but we are not using encryption
+        client.lsend_module(wrk.socket, module_file_name); 
+    else
+    -- we have input and we use encryption
+        client.lsend_module(wrk.socket, module_file_name, wrk.aes_key); 
+    end
 end
 
 function do_bench(func, lib_func, func_name, m, data)
     connect_to_worker(m)
+    local wrk = config[1]
+    send_modules(wrk)
     current_tag = tags[m]
-    for i = 1,10, 1 do
+    print("Doing:", lib_func, current_tag)
+    for i = 1,loops, 1 do
         func(data)
     end
     close_worker(config[1].socket)
@@ -88,6 +114,7 @@ function get_avg_time(func_name)
     array = { e2e = e2e / len, nw = nw / len, init = init / len, exec = exec / len}
     return array
 end
+
 function do_remote(func_ptr, lib_func, func_name, ...)
     local lua_rem = do_bench(func_ptr, lib_func, func_name, 0, ...)
     local sgx_rem = do_bench(func_ptr, lib_func, func_name, 1, ...)
@@ -95,19 +122,20 @@ function do_remote(func_ptr, lib_func, func_name, ...)
     --print('Bench Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC')
     --print(func_name, lua_rem.exec, sgx_local.e2e, sgx_local.init, sgx_local.exec, lua_rem.e2e, lua_rem.nw, lua_rem.init, lua_rem.exec,
     --    sgx_rem.e2e, sgx_rem.nw, sgx_rem.init, sgx_rem.exec)
-    print('Bench          ', func_name)
-    print('Lua_Local      ', lua_rem.exec)
-    print('SGX_Local_E2E  ', sgx_local.e2e)
-    print('SGX_Local_INIT ', sgx_local.init)
-    print('SGX_Local_EXEC ', sgx_local.exec)
-    print('LUA_REMOTE_E2E ', lua_rem.e2e)
-    print('LUA_REMOTE_NW  ', lua_rem.nw)
-    print('LUA_REMOTE_INIT', lua_rem.init)
-    print('LUA_REMOTE_EXEC', lua_rem.exec)
-    print('SGX_REMOTE_E2E ', sgx_rem.e2e)
-    print('SGX_REMOTE_NW  ', sgx_rem.nw)
-    print('SGX_REMOTE_INIT', sgx_rem.init)
-    print('SGX_REMOTE_EXEC', sgx_rem.exec)
+   -- 
+    --print('Bench          ', func_name)
+    --print('Lua_Local      ', lua_rem.exec)
+    --print('SGX_Local_E2E  ', sgx_local.e2e)
+    --print('SGX_Local_INIT ', sgx_local.init)
+    --print('SGX_Local_EXEC ', sgx_local.exec)
+    --print('LUA_REMOTE_E2E ', lua_rem.e2e)
+    --print('LUA_REMOTE_NW  ', lua_rem.nw)
+    --print('LUA_REMOTE_INIT', lua_rem.init)
+    --print('LUA_REMOTE_EXEC', lua_rem.exec)
+    --print('SGX_REMOTE_E2E ', sgx_rem.e2e)
+    --print('SGX_REMOTE_NW  ', sgx_rem.nw)
+    --print('SGX_REMOTE_INIT', sgx_rem.init)
+    --print('SGX_REMOTE_EXEC', sgx_rem.exec)
 end
 
 function do_heavy(arg)
@@ -141,22 +169,64 @@ function do_algo()
 end
 
 function do_crypto(data)
-    do_remote(blake2b.hash, 'blake2b.hash', 'blake2b', data)
-    do_remote(chacha20.run, 'chacha20.run', 'chacha20', data)
-    do_remote(checksum.crc32, 'checksum.crc32', 'checksum', data)
-    do_remote(md5.hash, 'md5.hash', 'md5', data)
-    do_remote(norx.run, 'norx.run', 'norx', data)
-    do_remote(norx32.run, 'norx32.run', 'norx32', data)
-    do_remote(rabbit.run, 'rabbit.run', 'rabbit', data)
-    do_remote(rc4.run, 'rc4.run', 'rc4', data)
-    do_remote(salsa20.run, 'salsa20.run', 'salsa20', data)
-    do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
+--    do_remote(blake2b.hash, 'blake2b.hash', 'blake2b', data)
+--    do_remote(chacha20.run, 'chacha20.run', 'chacha20', data)
+--    do_remote(checksum.crc32, 'checksum.crc32', 'checksum', data)
+--    do_remote(md5.hash, 'md5.hash', 'md5', data)
+--    do_remote(norx.run, 'norx.run', 'norx', data)
+--    do_remote(norx32.run, 'norx32.run', 'norx32', data)
+--    do_remote(rabbit.run, 'rabbit.run', 'rabbit', data)
+--    do_remote(rc4.run, 'rc4.run', 'rc4', data)
+--    do_remote(salsa20.run, 'salsa20.run', 'salsa20', data)
+--    do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
     do_remote(sha2.sha512, 'sha2.sha512', 'sha512', data)
     do_remote(xtea.run, 'xtea.run', 'xtea', data)
 end
 
-local data = string.rep('x', 1000000)
-do_algo()
-do_crypto(data)
---do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
+function do_touches()
+    local lim = 1024 * 1024 * 4
+    local i = 1024
+    while i <= lim do
+        do_remote(opt.reads, 'opt.reads', 'reads', i)
+        do_remote(opt.writes, 'opt.writes', 'writes', i)
+        i = i * 2
+    end
+end
 
+-- start printing from 10K to 1M
+function do_prints()
+    local lim = 1000000
+    local i = 10000
+    while i <= lim do
+        do_remote(opt.t_print, 'opt.t_print', 'print', i)
+        if i == 10000 then
+            i = i * 10
+        else
+            i = i + 100000
+        end
+    end
+end
+
+-- start printing from 10K to 1M
+function do_freads()
+    local lim = 4 * 1024 * 1024
+    local i = 32
+    module_file_name = 'out'
+    local file = io.open ('out', 'w')
+    local data = string.rep('x', 32 * 1024 * 1024)
+    file:write(data)
+    io.close(file)
+    while i <= lim do
+        do_remote(opt.fread, 'opt.fread', 'fread', i)
+        i = i * 2
+    end
+    module_file_name = nil
+end
+
+local data = string.rep('x', 1000000)
+--do_algo()
+--do_crypto(data)
+--do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
+--do_freads()
+do_touches()
+do_prints()

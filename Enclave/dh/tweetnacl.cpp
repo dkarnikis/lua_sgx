@@ -8,7 +8,6 @@ typedef unsigned long long u64;
 typedef long long i64;
 typedef i64 gf[16];
 extern void randombytes(unsigned char *,unsigned char);
-
 static const u8
   _0[16],
   _9[32] = {9};

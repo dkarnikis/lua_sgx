@@ -1,4 +1,5 @@
 #include "Enclave_t.h"
+#include "dh/tweetnacl.h"
 #include "sgx_defs.h"
 #include <atomic>
 #include "sgx_trts.h"
@@ -15,38 +16,36 @@
 #include <sgx_thread.h>
 #include <time.h>
 /* size of the aes encryption key in bytes */
-#define AES_KEY_SIZE 16
+#define KEY_SIZE 16
+#define CHUNK_LEN 4096
 /* the response of the server back to the client */
 std::string server_response;
 /* the keypair of the server */
 unsigned char server_public_key[crypto_box_PUBLICKEYBYTES];
-unsigned char server_secret_key[crypto_box_SECRETKEYBYTES];
+unsigned char server_private_key[crypto_box_SECRETKEYBYTES];
 int argc;                               /* number of lua arguments                  */
 int count = 0;                          /* index for arguments                      */  
-int use_mempool = 0;                 	/* use custom mempool                       */
 int disable_execution_output = 0;       /* dont print the lua output on screen      */
 unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
-sgx_aes_ctr_128bit_key_t p_key[16];
+unsigned char encryption_key[KEY_SIZE * 2];
+
+
 unsigned char *enc;
-short size = 0;
 /*
  * 1 = read everything without decrypting. Is used for local execution or
  * for bootstraping the lua instance for local/remote
  */
 int enclave_bootstrap = 1;
-/* the current user id */
-int current_user_id = 420;
 
 int run_locally = 0;                    /* do we run locally                        */
-std::string code_to_execute = "";
-                                                    /* from it to enable global variables. JIT      */
-std::string lvm = "./lua_vm";
 /* used for indexing into the vector code lines */
 int counter = -1;
 int getc_len = 0;
 char *getc_buffer = NULL;
 
 void bootstrap_lua();
+
+unsigned char *decrypt_chunks(unsigned char *enc, size_t data_size);
 
 void
 print_key(const char *s, uint8_t *key, int size)
@@ -57,6 +56,8 @@ print_key(const char *s, uint8_t *key, int size)
         printf("%u", key[i]);
     printf("\n");
 }
+
+unsigned char * code_decrypt(unsigned char *str, size_t len);
 
 int
 printf(const char* fmt, ...)
@@ -74,11 +75,6 @@ printf(const char* fmt, ...)
     return res;   
 }
 
-void
-randombytes(unsigned char *a,unsigned char b)
-{
-    sgx_read_rand(a, b);
-}
 
 /*
  * generate the public and private key of the server
@@ -86,7 +82,7 @@ randombytes(unsigned char *a,unsigned char b)
 void
 ecall_gen_pkeys(void)
 {
-    crypto_box_keypair(server_public_key, server_secret_key);
+    crypto_box_keypair(server_public_key, server_private_key);
 }
 
 
@@ -99,6 +95,22 @@ ecall_get_server_pkey(unsigned char *key, int k)
     memcpy(key, server_public_key, k);
 }
 
+
+void
+randombytes(unsigned char *b, unsigned char len)
+{
+    sgx_read_rand(b, len);
+}
+
+void
+gen_encryption_key(unsigned char *b, size_t len)
+{
+    //unsigned char buffer[KEY_SIZE];
+    sgx_read_rand(b, len);
+}
+
+
+
 /*
  * generate the aes key and send it to the client 
  */
@@ -106,82 +118,16 @@ void
 ecall_send_aes_key(int id)
 {
     Content c;
-    int k;
-    unsigned char buffer[AES_KEY_SIZE];
-    //index = get_client_by_id(current_user_id);
-	/* 
-	 * A new client request is received, that has size == 0 -> 
-	 * allocate new buffers
- 	 */
-		/* generate the AES KEY */
-		randombytes(buffer, AES_KEY_SIZE);
-		/* copy the random key to our aes key */
-		for (k = 0; k < AES_KEY_SIZE; k++)
-		    p_key[0][k] = (char)buffer[k];
-    	/* encrypt the shared key and send it to the other party */
-    	c = encrypt(buffer, (size_t)AES_KEY_SIZE, 
-				client_public_key, server_secret_key);
-		/* allocate new buffer for our encrypted AES KEY */
-		enc = (unsigned char *)calloc(1, c.size);
-		memcpy(enc, c.bytes, c.size);
-		size = c.size;
-	/* fetch the encrypted AES KEY and send it to the client */
-    ocall_send_packet(enc, size, id);
+    gen_encryption_key(encryption_key, KEY_SIZE * 2);
+    c = encrypt(encryption_key, KEY_SIZE, client_public_key, server_private_key);
+    ocall_send_packet(id, c.bytes, c.size);
+    c = encrypt(&encryption_key[16], KEY_SIZE, client_public_key, server_private_key);
+    ocall_send_packet(id, c.bytes, c.size);
 }
 
-/*
- * decrypt the incoming code from the client using AES
- */
-char *
-code_decrypt(char *str, int len, int cid)
-{
-    uint8_t iv[AES_KEY_SIZE];
-    char *res;
-    sgx_status_t ret;
-    ret = SGX_SUCCESS;
-    res = (char *)calloc(1, len + 1);
-    memset(iv, '5', 16);
-    ret = sgx_aes_ctr_decrypt(p_key, (uint8_t *)str, len, iv, 16, (uint8_t *)res);
-    if (ret != SGX_SUCCESS)
-        exit(EXIT_FAILURE);
-    return res;
-}
 
-/*
- * Encrypt the data before sending them to the client
- */
-void
-ecall_encrypt(char *str, int len, int id)
-{
-    uint8_t iv[AES_KEY_SIZE];
-    char *xd;
-    sgx_status_t ret;
-    xd = (char *)calloc(1, len);
-    ret = SGX_SUCCESS;
-    memset(iv, '5', 16);
-    ret = sgx_aes_ctr_encrypt(p_key, (uint8_t *)str, len, iv, 16, (uint8_t *)xd);
-    if (ret != SGX_SUCCESS)
-        exit(EXIT_FAILURE);
-    ocall_send_packet((unsigned char *)xd, len, id);
-    free(xd);
-}
 
-/*
- * injects each line of client's code into the executable code buffer
- */
-std::vector<std::string>
-split_string(const std::string& str)
-{
-    std::vector<std::string> strings;
-    std::string delimiter = "\n";
-    std::string::size_type pos = 0;
-    std::string::size_type prev = 0;
-    while ((pos = str.find(delimiter, prev)) != std::string::npos) {
-        strings.push_back(str.substr(prev, pos - prev));
-        prev = pos + 1;
-    }
-    return strings;
-}
+
 
 
 /*
@@ -199,37 +145,6 @@ ecall_init(int di, FILE *stdi, FILE *stdo, FILE *stde)
 }
 
 /*
- * Read code data from file
- */
-char *
-read_code_data(char *fname, int *size, int id)
-{
-    /* read file contents */
-    void *data;
-    char *plain_data;
-    FILE *code;
-    size_t a;
-    data = NULL;
-    plain_data = NULL;
-    code = fopen(fname, "r");                
-    if (code == NULL)
-        abort();
-    /* get file size */
-    ocall_get_file_size(size, code);
-    /* alloc the data and encrypted buffer */ 
-    data = (char *)calloc(1, *size);
-    /* copy file contents to buffer */
-    ocall_fread(&a, data, sizeof(char), *size, code);
-    fclose(code);
-    /* perform decrypt here if we have encrypted text */
-    /* we are in encryption mode, decrypt the buffer */
-    plain_data = code_decrypt((char *)data, *size, id);
-    free(data);
-    plain_data[*size] = '\0';
-    return plain_data;
-}
-
-/*
  * Start executing the code
  */
 void
@@ -243,7 +158,7 @@ ecall_execute(int id, int local_exec)
     response = first_data = NULL;
     count = 1;
     char **argv;                            /* the actual arguments of lua              */
-    argv = (char **)malloc(4 * sizeof(char *));
+    argv = (char **)calloc(4, sizeof(char *));
     argv[0] = strdup("code.lua");
     argv[1] = strdup("code.lua");
     argv[2] = NULL;
@@ -256,14 +171,15 @@ ecall_execute(int id, int local_exec)
     server_response_len = server_response.length();
     response = (char *)calloc(1, sizeof(char) * server_response_len + 1);
     strncpy(response, server_response.c_str(), server_response_len + 1);
-    if (local_exec == 0)
-        ecall_encrypt(response, server_response_len, id);
-    else 
-        ocall_send_packet((unsigned char *)response, server_response_len + 1, id);
+    if (local_exec == 0) {
+        unsigned char *xd = decrypt_chunks((unsigned char *)response, server_response_len);//ecall_encrypt(response, server_response_len, id);
+        ocall_send_packet(id, (unsigned char *)xd, server_response_len);
+        free(xd);
+    } else 
+        ocall_send_packet(id, (unsigned char *)response, server_response_len + 1);
 	/* cleanup time */
     free(response);
 	server_response = "";
-	code_to_execute = "";
     free(argv[0]);
     free(argv[1]);
     free(argv);
@@ -274,13 +190,13 @@ ecall_execute(int id, int local_exec)
 int
 fprintf(FILE *file, const char* fmt, ...)
 {
-    #define BUFSIZE 1000
+    //#define BUFSIZE 1000
     int res;
-    char buf[BUFSIZE] = {'\0'};
+    char buf[BUFSIZ] = {'\0'};
     va_list ap;
     res = 0;
     va_start(ap, fmt);
-    vsnprintf(buf, BUFSIZE, fmt, ap);
+    vsnprintf(buf, BUFSIZ, fmt, ap);
     va_end(ap);
     res+= fwrite(buf, 1, strlen(buf), file);
     return res;   
@@ -313,7 +229,7 @@ fwrite(const void *buffer, size_t size, size_t cont, FILE *fd)
         server_response.append((char *)buffer);
     // print output enabled
     // on remote opts, dont print anything
-    if (enclave_bootstrap == 1) //enclave_boodisable_execution_output == 0 || (disable_execution_output == 1 && fd != stdout))
+    if (enclave_bootstrap == 1)
         ocall_fwrite(&res, buffer, size, cont, fd);
     return res;
 }
@@ -347,6 +263,8 @@ fopen(const char *filename, const char *mode)
 void
 exit(int status_)
 {
+
+    printf("Error! x\n");
     abort();
     ocall_exit(status_);
 }
@@ -445,6 +363,51 @@ clearerr(FILE *stream)
     ocall_clearerr(stream);
 }
 
+
+/*
+ * decrypt the incoming code from the client using AES
+ */
+unsigned char *
+code_decrypt(unsigned char *str, size_t len)
+{
+    unsigned char n[crypto_stream_NONCEBYTES];
+    unsigned char *cipher;
+    cipher = (unsigned char *)calloc(len, sizeof(unsigned char) + 1);
+    memset(n, 0, crypto_stream_NONCEBYTES);
+    crypto_stream_xor(cipher, str, len, n, encryption_key);
+    cipher[len] = '\0';
+    return cipher;
+}
+
+/*
+ * Same function for encryption/decryption
+ */
+unsigned char *
+decrypt_chunks(unsigned char *enc, size_t data_size)
+{
+    size_t len, rx_bytes;
+    unsigned char *plain_text, *cipher;
+    len = CHUNK_LEN;
+    rx_bytes = 0;
+    plain_text = (unsigned char *)calloc(1, data_size);
+    while (rx_bytes != data_size) {
+        if ((rx_bytes + len) > data_size) {
+            len = data_size - rx_bytes;
+        }
+        cipher =  code_decrypt(&enc[rx_bytes], len);
+        memcpy(&plain_text[rx_bytes], cipher, len);
+        rx_bytes += len;
+        cipher[len] = '\0';
+#ifdef DEBUG
+        printf("|%.*s|\n", len, cipher);
+#endif
+        free(cipher);
+    }
+    //printf("||||||%.*s||||||\n", data_size, plain_text);
+    return plain_text;
+}
+
+
 size_t
 fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
@@ -458,9 +421,10 @@ fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
     ocall_fread(&a, ptr, size, nmemb, stream);
     // if we did not read anything, skip or if we are running locally
     if (a == 0 || enclave_bootstrap == 1) 
-        return a;	
+        return a;
     // we are in encryption mode, decrypt the buffer
-    xd = code_decrypt((char *)ptr, a, current_user_id);
+    //xd = decrypt_chunks((unsigned char *)ptr, a);
+    xd = decrypt_chunks(ptr, a);
     // copy the buffer into lua code buffer(ptr)
     memcpy(ptr, xd, a);
     free(xd);
@@ -588,8 +552,9 @@ rec_filename(FILE *f)
 
 void
 perror(const char *s)
-{
+{   
     fprintf(stdout, "%s", s);
+    fflush(stdout);
     abort();
 }
 
@@ -683,8 +648,6 @@ pclose(FILE *stream)
     ocall_pclose(&a, stream);
     return a;
 }
-
-
 
 /*
  * Register the client public key

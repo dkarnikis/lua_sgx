@@ -1,0 +1,345 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+A	tweetnacl.cpp	/^sv A(gf o,const gf a,const gf b)$/;"	f
+Ch	tweetnacl.cpp	/^static u64 Ch(u64 x,u64 y,u64 z) { return (x & y) ^ (~x & z); }$/;"	f	file:
+Content	tools.cpp	/^typedef struct content Content;$/;"	t	typeref:struct:content	file:
+Content	tools.h	/^    typedef struct content Content;$/;"	t	typeref:struct:content
+D	tweetnacl.cpp	/^  D = {0x78a3, 0x1359, 0x4dca, 0x75eb, 0xd8ab, 0x4141, 0x0a4d, 0x0070, 0xe898, 0x7779, 0x4079, 0x8cc7, 0xfe73, 0x2b6f, 0x6cee, 0x5203},$/;"	v	file:
+D2	tweetnacl.cpp	/^  D2 = {0xf159, 0x26b2, 0x9b94, 0xebd6, 0xb156, 0x8283, 0x149a, 0x00e0, 0xd130, 0xeef3, 0x80f2, 0x198e, 0xfce7, 0x56df, 0xd9dc, 0x2406},$/;"	v	file:
+FOR	tweetnacl.cpp	2;"	d	file:
+I	tweetnacl.cpp	/^  I = {0xa0b0, 0x4a0e, 0x1b27, 0xc4ee, 0xe478, 0xad2f, 0x1806, 0x2f43, 0xd7a7, 0x3dfb, 0x0099, 0x2b4d, 0xdf0b, 0x4fc1, 0x2480, 0x2b83};$/;"	v	file:
+K	tweetnacl.cpp	/^static const u64 K[80] = $/;"	v	file:
+L	tweetnacl.cpp	/^static const u64 L[32] = {0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10};$/;"	v	file:
+L32	tweetnacl.cpp	/^static u32 L32(u32 x,int c) { return (x << c) | ((x&0xffffffff) >> (32 - c)); }$/;"	f	file:
+M	tweetnacl.cpp	/^sv M(gf o,const gf a,const gf b)$/;"	f
+Maj	tweetnacl.cpp	/^static u64 Maj(u64 x,u64 y,u64 z) { return (x & y) ^ (x & z) ^ (y & z); }$/;"	f	file:
+R	tweetnacl.cpp	/^static u64 R(u64 x,int c) { return (x >> c) | (x << (64 - c)); }$/;"	f	file:
+S	tweetnacl.cpp	/^sv S(gf o,const gf a)$/;"	f
+Sigma0	tweetnacl.cpp	/^static u64 Sigma0(u64 x) { return R(x,28) ^ R(x,34) ^ R(x,39); }$/;"	f	file:
+Sigma1	tweetnacl.cpp	/^static u64 Sigma1(u64 x) { return R(x,14) ^ R(x,18) ^ R(x,41); }$/;"	f	file:
+TWEETNACL_H	tweetnacl.h	2;"	d
+X	tweetnacl.cpp	/^  X = {0xd51a, 0x8f25, 0x2d60, 0xc956, 0xa7b2, 0x9525, 0xc760, 0x692c, 0xdc5c, 0xfdd6, 0xe231, 0xc0a4, 0x53fe, 0xcd6e, 0x36d3, 0x2169},$/;"	v	file:
+Y	tweetnacl.cpp	/^  Y = {0x6658, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666},$/;"	v	file:
+Z	tweetnacl.cpp	/^sv Z(gf o,const gf a,const gf b)$/;"	f
+_0	tweetnacl.cpp	/^  _0[16],$/;"	v	file:
+_121665	tweetnacl.cpp	/^  _121665 = {0xDB41,1},$/;"	v	file:
+_9	tweetnacl.cpp	/^  _9[32] = {9};$/;"	v	file:
+add	tweetnacl.cpp	/^sv add(gf p[4],gf q[4])$/;"	f
+add1305	tweetnacl.cpp	/^sv add1305(u32 *h,const u32 *c)$/;"	f
+bytes	tools.cpp	/^    unsigned char *bytes;$/;"	m	struct:content	file:
+bytes	tools.h	/^        unsigned char *bytes;$/;"	m	struct:content
+bytes_to_hex	tools.cpp	/^char * bytes_to_hex(unsigned char bytes[], int size) {$/;"	f
+car25519	tweetnacl.cpp	/^sv car25519(gf o)$/;"	f
+content	tools.cpp	/^struct content {$/;"	s	file:
+content	tools.h	/^    struct content {$/;"	s
+core	tweetnacl.cpp	/^sv core(u8 *out,const u8 *in,const u8 *k,const u8 *c,int h)$/;"	f
+crypto_auth	tweetnacl.h	4;"	d
+crypto_auth_BYTES	tweetnacl.h	6;"	d
+crypto_auth_IMPLEMENTATION	tweetnacl.h	8;"	d
+crypto_auth_KEYBYTES	tweetnacl.h	7;"	d
+crypto_auth_PRIMITIVE	tweetnacl.h	3;"	d
+crypto_auth_VERSION	tweetnacl.h	9;"	d
+crypto_auth_hmacsha512256	tweetnacl.h	15;"	d
+crypto_auth_hmacsha512256_BYTES	tweetnacl.h	17;"	d
+crypto_auth_hmacsha512256_IMPLEMENTATION	tweetnacl.h	20;"	d
+crypto_auth_hmacsha512256_KEYBYTES	tweetnacl.h	18;"	d
+crypto_auth_hmacsha512256_VERSION	tweetnacl.h	19;"	d
+crypto_auth_hmacsha512256_tweet_BYTES	tweetnacl.h	10;"	d
+crypto_auth_hmacsha512256_tweet_KEYBYTES	tweetnacl.h	11;"	d
+crypto_auth_hmacsha512256_tweet_VERSION	tweetnacl.h	14;"	d
+crypto_auth_hmacsha512256_verify	tweetnacl.h	16;"	d
+crypto_auth_verify	tweetnacl.h	5;"	d
+crypto_box	tweetnacl.cpp	/^int crypto_box(u8 *c,const u8 *m,u64 d,const u8 *n,const u8 *y,const u8 *x)$/;"	f
+crypto_box	tweetnacl.h	22;"	d
+crypto_box_BEFORENMBYTES	tweetnacl.h	30;"	d
+crypto_box_BOXZEROBYTES	tweetnacl.h	33;"	d
+crypto_box_IMPLEMENTATION	tweetnacl.h	34;"	d
+crypto_box_NONCEBYTES	tweetnacl.h	31;"	d
+crypto_box_PRIMITIVE	tweetnacl.h	21;"	d
+crypto_box_PUBLICKEYBYTES	tweetnacl.h	28;"	d
+crypto_box_SECRETKEYBYTES	tweetnacl.h	29;"	d
+crypto_box_VERSION	tweetnacl.h	35;"	d
+crypto_box_ZEROBYTES	tweetnacl.h	32;"	d
+crypto_box_afternm	tweetnacl.cpp	/^int crypto_box_afternm(u8 *c,const u8 *m,u64 d,const u8 *n,const u8 *k)$/;"	f
+crypto_box_afternm	tweetnacl.h	26;"	d
+crypto_box_beforenm	tweetnacl.cpp	/^int crypto_box_beforenm(u8 *k,const u8 *y,const u8 *x)$/;"	f
+crypto_box_beforenm	tweetnacl.h	25;"	d
+crypto_box_curve25519xsalsa20poly1305	tweetnacl.h	49;"	d
+crypto_box_curve25519xsalsa20poly1305_BEFORENMBYTES	tweetnacl.h	57;"	d
+crypto_box_curve25519xsalsa20poly1305_BOXZEROBYTES	tweetnacl.h	60;"	d
+crypto_box_curve25519xsalsa20poly1305_IMPLEMENTATION	tweetnacl.h	62;"	d
+crypto_box_curve25519xsalsa20poly1305_NONCEBYTES	tweetnacl.h	58;"	d
+crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES	tweetnacl.h	55;"	d
+crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES	tweetnacl.h	56;"	d
+crypto_box_curve25519xsalsa20poly1305_VERSION	tweetnacl.h	61;"	d
+crypto_box_curve25519xsalsa20poly1305_ZEROBYTES	tweetnacl.h	59;"	d
+crypto_box_curve25519xsalsa20poly1305_afternm	tweetnacl.h	53;"	d
+crypto_box_curve25519xsalsa20poly1305_beforenm	tweetnacl.h	52;"	d
+crypto_box_curve25519xsalsa20poly1305_keypair	tweetnacl.h	51;"	d
+crypto_box_curve25519xsalsa20poly1305_open	tweetnacl.h	50;"	d
+crypto_box_curve25519xsalsa20poly1305_open_afternm	tweetnacl.h	54;"	d
+crypto_box_curve25519xsalsa20poly1305_tweet_BEFORENMBYTES	tweetnacl.h	38;"	d
+crypto_box_curve25519xsalsa20poly1305_tweet_BOXZEROBYTES	tweetnacl.h	41;"	d
+crypto_box_curve25519xsalsa20poly1305_tweet_NONCEBYTES	tweetnacl.h	39;"	d
+crypto_box_curve25519xsalsa20poly1305_tweet_PUBLICKEYBYTES	tweetnacl.h	36;"	d
+crypto_box_curve25519xsalsa20poly1305_tweet_SECRETKEYBYTES	tweetnacl.h	37;"	d
+crypto_box_curve25519xsalsa20poly1305_tweet_VERSION	tweetnacl.h	48;"	d
+crypto_box_curve25519xsalsa20poly1305_tweet_ZEROBYTES	tweetnacl.h	40;"	d
+crypto_box_keypair	tweetnacl.cpp	/^int crypto_box_keypair(u8 *y,u8 *x)$/;"	f
+crypto_box_keypair	tweetnacl.h	24;"	d
+crypto_box_open	tweetnacl.cpp	/^int crypto_box_open(u8 *m,const u8 *c,u64 d,const u8 *n,const u8 *y,const u8 *x)$/;"	f
+crypto_box_open	tweetnacl.h	23;"	d
+crypto_box_open_afternm	tweetnacl.cpp	/^int crypto_box_open_afternm(u8 *m,const u8 *c,u64 d,const u8 *n,const u8 *k)$/;"	f
+crypto_box_open_afternm	tweetnacl.h	27;"	d
+crypto_core	tweetnacl.h	64;"	d
+crypto_core_CONSTBYTES	tweetnacl.h	68;"	d
+crypto_core_IMPLEMENTATION	tweetnacl.h	69;"	d
+crypto_core_INPUTBYTES	tweetnacl.h	66;"	d
+crypto_core_KEYBYTES	tweetnacl.h	67;"	d
+crypto_core_OUTPUTBYTES	tweetnacl.h	65;"	d
+crypto_core_PRIMITIVE	tweetnacl.h	63;"	d
+crypto_core_VERSION	tweetnacl.h	70;"	d
+crypto_core_hsalsa20	tweetnacl.cpp	/^int crypto_core_hsalsa20(u8 *out,const u8 *in,const u8 *k,const u8 *c)$/;"	f
+crypto_core_hsalsa20	tweetnacl.h	90;"	d
+crypto_core_hsalsa20_CONSTBYTES	tweetnacl.h	94;"	d
+crypto_core_hsalsa20_IMPLEMENTATION	tweetnacl.h	96;"	d
+crypto_core_hsalsa20_INPUTBYTES	tweetnacl.h	92;"	d
+crypto_core_hsalsa20_KEYBYTES	tweetnacl.h	93;"	d
+crypto_core_hsalsa20_OUTPUTBYTES	tweetnacl.h	91;"	d
+crypto_core_hsalsa20_VERSION	tweetnacl.h	95;"	d
+crypto_core_hsalsa20_tweet_CONSTBYTES	tweetnacl.h	87;"	d
+crypto_core_hsalsa20_tweet_INPUTBYTES	tweetnacl.h	85;"	d
+crypto_core_hsalsa20_tweet_KEYBYTES	tweetnacl.h	86;"	d
+crypto_core_hsalsa20_tweet_OUTPUTBYTES	tweetnacl.h	84;"	d
+crypto_core_hsalsa20_tweet_VERSION	tweetnacl.h	89;"	d
+crypto_core_salsa20	tweetnacl.cpp	/^int crypto_core_salsa20(u8 *out,const u8 *in,const u8 *k,const u8 *c)$/;"	f
+crypto_core_salsa20	tweetnacl.h	77;"	d
+crypto_core_salsa20_CONSTBYTES	tweetnacl.h	81;"	d
+crypto_core_salsa20_IMPLEMENTATION	tweetnacl.h	83;"	d
+crypto_core_salsa20_INPUTBYTES	tweetnacl.h	79;"	d
+crypto_core_salsa20_KEYBYTES	tweetnacl.h	80;"	d
+crypto_core_salsa20_OUTPUTBYTES	tweetnacl.h	78;"	d
+crypto_core_salsa20_VERSION	tweetnacl.h	82;"	d
+crypto_core_salsa20_tweet_CONSTBYTES	tweetnacl.h	74;"	d
+crypto_core_salsa20_tweet_INPUTBYTES	tweetnacl.h	72;"	d
+crypto_core_salsa20_tweet_KEYBYTES	tweetnacl.h	73;"	d
+crypto_core_salsa20_tweet_OUTPUTBYTES	tweetnacl.h	71;"	d
+crypto_core_salsa20_tweet_VERSION	tweetnacl.h	76;"	d
+crypto_hash	tweetnacl.cpp	/^int crypto_hash(u8 *out,const u8 *m,u64 n)$/;"	f
+crypto_hash	tweetnacl.h	122;"	d
+crypto_hash_BYTES	tweetnacl.h	123;"	d
+crypto_hash_IMPLEMENTATION	tweetnacl.h	124;"	d
+crypto_hash_PRIMITIVE	tweetnacl.h	121;"	d
+crypto_hash_VERSION	tweetnacl.h	125;"	d
+crypto_hash_sha256	tweetnacl.h	136;"	d
+crypto_hash_sha256_BYTES	tweetnacl.h	137;"	d
+crypto_hash_sha256_IMPLEMENTATION	tweetnacl.h	139;"	d
+crypto_hash_sha256_VERSION	tweetnacl.h	138;"	d
+crypto_hash_sha256_tweet_BYTES	tweetnacl.h	133;"	d
+crypto_hash_sha256_tweet_VERSION	tweetnacl.h	135;"	d
+crypto_hash_sha512	tweetnacl.h	129;"	d
+crypto_hash_sha512_BYTES	tweetnacl.h	130;"	d
+crypto_hash_sha512_IMPLEMENTATION	tweetnacl.h	132;"	d
+crypto_hash_sha512_VERSION	tweetnacl.h	131;"	d
+crypto_hash_sha512_tweet_BYTES	tweetnacl.h	126;"	d
+crypto_hash_sha512_tweet_VERSION	tweetnacl.h	128;"	d
+crypto_hashblocks	tweetnacl.cpp	/^int crypto_hashblocks(u8 *x,const u8 *m,u64 n)$/;"	f
+crypto_hashblocks	tweetnacl.h	98;"	d
+crypto_hashblocks_BLOCKBYTES	tweetnacl.h	100;"	d
+crypto_hashblocks_IMPLEMENTATION	tweetnacl.h	101;"	d
+crypto_hashblocks_PRIMITIVE	tweetnacl.h	97;"	d
+crypto_hashblocks_STATEBYTES	tweetnacl.h	99;"	d
+crypto_hashblocks_VERSION	tweetnacl.h	102;"	d
+crypto_hashblocks_sha256	tweetnacl.h	116;"	d
+crypto_hashblocks_sha256_BLOCKBYTES	tweetnacl.h	118;"	d
+crypto_hashblocks_sha256_IMPLEMENTATION	tweetnacl.h	120;"	d
+crypto_hashblocks_sha256_STATEBYTES	tweetnacl.h	117;"	d
+crypto_hashblocks_sha256_VERSION	tweetnacl.h	119;"	d
+crypto_hashblocks_sha256_tweet_BLOCKBYTES	tweetnacl.h	113;"	d
+crypto_hashblocks_sha256_tweet_STATEBYTES	tweetnacl.h	112;"	d
+crypto_hashblocks_sha256_tweet_VERSION	tweetnacl.h	115;"	d
+crypto_hashblocks_sha512	tweetnacl.h	107;"	d
+crypto_hashblocks_sha512_BLOCKBYTES	tweetnacl.h	109;"	d
+crypto_hashblocks_sha512_IMPLEMENTATION	tweetnacl.h	111;"	d
+crypto_hashblocks_sha512_STATEBYTES	tweetnacl.h	108;"	d
+crypto_hashblocks_sha512_VERSION	tweetnacl.h	110;"	d
+crypto_hashblocks_sha512_tweet_BLOCKBYTES	tweetnacl.h	104;"	d
+crypto_hashblocks_sha512_tweet_STATEBYTES	tweetnacl.h	103;"	d
+crypto_hashblocks_sha512_tweet_VERSION	tweetnacl.h	106;"	d
+crypto_onetimeauth	tweetnacl.cpp	/^int crypto_onetimeauth(u8 *out,const u8 *m,u64 n,const u8 *k)$/;"	f
+crypto_onetimeauth	tweetnacl.h	141;"	d
+crypto_onetimeauth_BYTES	tweetnacl.h	143;"	d
+crypto_onetimeauth_IMPLEMENTATION	tweetnacl.h	145;"	d
+crypto_onetimeauth_KEYBYTES	tweetnacl.h	144;"	d
+crypto_onetimeauth_PRIMITIVE	tweetnacl.h	140;"	d
+crypto_onetimeauth_VERSION	tweetnacl.h	146;"	d
+crypto_onetimeauth_poly1305	tweetnacl.h	152;"	d
+crypto_onetimeauth_poly1305_BYTES	tweetnacl.h	154;"	d
+crypto_onetimeauth_poly1305_IMPLEMENTATION	tweetnacl.h	157;"	d
+crypto_onetimeauth_poly1305_KEYBYTES	tweetnacl.h	155;"	d
+crypto_onetimeauth_poly1305_VERSION	tweetnacl.h	156;"	d
+crypto_onetimeauth_poly1305_tweet_BYTES	tweetnacl.h	147;"	d
+crypto_onetimeauth_poly1305_tweet_KEYBYTES	tweetnacl.h	148;"	d
+crypto_onetimeauth_poly1305_tweet_VERSION	tweetnacl.h	151;"	d
+crypto_onetimeauth_poly1305_verify	tweetnacl.h	153;"	d
+crypto_onetimeauth_verify	tweetnacl.cpp	/^int crypto_onetimeauth_verify(const u8 *h,const u8 *m,u64 n,const u8 *k)$/;"	f
+crypto_onetimeauth_verify	tweetnacl.h	142;"	d
+crypto_scalarmult	tweetnacl.cpp	/^int crypto_scalarmult(u8 *q,const u8 *n,const u8 *p)$/;"	f
+crypto_scalarmult	tweetnacl.h	159;"	d
+crypto_scalarmult_BYTES	tweetnacl.h	161;"	d
+crypto_scalarmult_IMPLEMENTATION	tweetnacl.h	163;"	d
+crypto_scalarmult_PRIMITIVE	tweetnacl.h	158;"	d
+crypto_scalarmult_SCALARBYTES	tweetnacl.h	162;"	d
+crypto_scalarmult_VERSION	tweetnacl.h	164;"	d
+crypto_scalarmult_base	tweetnacl.cpp	/^int crypto_scalarmult_base(u8 *q,const u8 *n)$/;"	f
+crypto_scalarmult_base	tweetnacl.h	160;"	d
+crypto_scalarmult_curve25519	tweetnacl.h	170;"	d
+crypto_scalarmult_curve25519_BYTES	tweetnacl.h	172;"	d
+crypto_scalarmult_curve25519_IMPLEMENTATION	tweetnacl.h	175;"	d
+crypto_scalarmult_curve25519_SCALARBYTES	tweetnacl.h	173;"	d
+crypto_scalarmult_curve25519_VERSION	tweetnacl.h	174;"	d
+crypto_scalarmult_curve25519_base	tweetnacl.h	171;"	d
+crypto_scalarmult_curve25519_tweet_BYTES	tweetnacl.h	165;"	d
+crypto_scalarmult_curve25519_tweet_SCALARBYTES	tweetnacl.h	166;"	d
+crypto_scalarmult_curve25519_tweet_VERSION	tweetnacl.h	169;"	d
+crypto_secretbox	tweetnacl.cpp	/^int crypto_secretbox(u8 *c,const u8 *m,u64 d,const u8 *n,const u8 *k)$/;"	f
+crypto_secretbox	tweetnacl.h	177;"	d
+crypto_secretbox_BOXZEROBYTES	tweetnacl.h	182;"	d
+crypto_secretbox_IMPLEMENTATION	tweetnacl.h	183;"	d
+crypto_secretbox_KEYBYTES	tweetnacl.h	179;"	d
+crypto_secretbox_NONCEBYTES	tweetnacl.h	180;"	d
+crypto_secretbox_PRIMITIVE	tweetnacl.h	176;"	d
+crypto_secretbox_VERSION	tweetnacl.h	184;"	d
+crypto_secretbox_ZEROBYTES	tweetnacl.h	181;"	d
+crypto_secretbox_open	tweetnacl.cpp	/^int crypto_secretbox_open(u8 *m,const u8 *c,u64 d,const u8 *n,const u8 *k)$/;"	f
+crypto_secretbox_open	tweetnacl.h	178;"	d
+crypto_secretbox_xsalsa20poly1305	tweetnacl.h	192;"	d
+crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES	tweetnacl.h	197;"	d
+crypto_secretbox_xsalsa20poly1305_IMPLEMENTATION	tweetnacl.h	199;"	d
+crypto_secretbox_xsalsa20poly1305_KEYBYTES	tweetnacl.h	194;"	d
+crypto_secretbox_xsalsa20poly1305_NONCEBYTES	tweetnacl.h	195;"	d
+crypto_secretbox_xsalsa20poly1305_VERSION	tweetnacl.h	198;"	d
+crypto_secretbox_xsalsa20poly1305_ZEROBYTES	tweetnacl.h	196;"	d
+crypto_secretbox_xsalsa20poly1305_open	tweetnacl.h	193;"	d
+crypto_secretbox_xsalsa20poly1305_tweet_BOXZEROBYTES	tweetnacl.h	188;"	d
+crypto_secretbox_xsalsa20poly1305_tweet_KEYBYTES	tweetnacl.h	185;"	d
+crypto_secretbox_xsalsa20poly1305_tweet_NONCEBYTES	tweetnacl.h	186;"	d
+crypto_secretbox_xsalsa20poly1305_tweet_VERSION	tweetnacl.h	191;"	d
+crypto_secretbox_xsalsa20poly1305_tweet_ZEROBYTES	tweetnacl.h	187;"	d
+crypto_sign	tweetnacl.cpp	/^int crypto_sign(u8 *sm,u64 *smlen,const u8 *m,u64 n,const u8 *sk)$/;"	f
+crypto_sign	tweetnacl.h	201;"	d
+crypto_sign_BYTES	tweetnacl.h	204;"	d
+crypto_sign_IMPLEMENTATION	tweetnacl.h	207;"	d
+crypto_sign_PRIMITIVE	tweetnacl.h	200;"	d
+crypto_sign_PUBLICKEYBYTES	tweetnacl.h	205;"	d
+crypto_sign_SECRETKEYBYTES	tweetnacl.h	206;"	d
+crypto_sign_VERSION	tweetnacl.h	208;"	d
+crypto_sign_ed25519	tweetnacl.h	216;"	d
+crypto_sign_ed25519_BYTES	tweetnacl.h	219;"	d
+crypto_sign_ed25519_IMPLEMENTATION	tweetnacl.h	223;"	d
+crypto_sign_ed25519_PUBLICKEYBYTES	tweetnacl.h	220;"	d
+crypto_sign_ed25519_SECRETKEYBYTES	tweetnacl.h	221;"	d
+crypto_sign_ed25519_VERSION	tweetnacl.h	222;"	d
+crypto_sign_ed25519_keypair	tweetnacl.h	218;"	d
+crypto_sign_ed25519_open	tweetnacl.h	217;"	d
+crypto_sign_ed25519_tweet_BYTES	tweetnacl.h	209;"	d
+crypto_sign_ed25519_tweet_PUBLICKEYBYTES	tweetnacl.h	210;"	d
+crypto_sign_ed25519_tweet_SECRETKEYBYTES	tweetnacl.h	211;"	d
+crypto_sign_ed25519_tweet_VERSION	tweetnacl.h	215;"	d
+crypto_sign_keypair	tweetnacl.cpp	/^int crypto_sign_keypair(u8 *pk, u8 *sk)$/;"	f
+crypto_sign_keypair	tweetnacl.h	203;"	d
+crypto_sign_open	tweetnacl.cpp	/^int crypto_sign_open(u8 *m,u64 *mlen,const u8 *sm,u64 n,const u8 *pk)$/;"	f
+crypto_sign_open	tweetnacl.h	202;"	d
+crypto_stream	tweetnacl.cpp	/^int crypto_stream(u8 *c,u64 d,const u8 *n,const u8 *k)$/;"	f
+crypto_stream	tweetnacl.h	225;"	d
+crypto_stream_IMPLEMENTATION	tweetnacl.h	229;"	d
+crypto_stream_KEYBYTES	tweetnacl.h	227;"	d
+crypto_stream_NONCEBYTES	tweetnacl.h	228;"	d
+crypto_stream_PRIMITIVE	tweetnacl.h	224;"	d
+crypto_stream_VERSION	tweetnacl.h	230;"	d
+crypto_stream_salsa20	tweetnacl.cpp	/^int crypto_stream_salsa20(u8 *c,u64 d,const u8 *n,const u8 *k)$/;"	f
+crypto_stream_salsa20	tweetnacl.h	247;"	d
+crypto_stream_salsa20_IMPLEMENTATION	tweetnacl.h	252;"	d
+crypto_stream_salsa20_KEYBYTES	tweetnacl.h	249;"	d
+crypto_stream_salsa20_NONCEBYTES	tweetnacl.h	250;"	d
+crypto_stream_salsa20_VERSION	tweetnacl.h	251;"	d
+crypto_stream_salsa20_tweet_KEYBYTES	tweetnacl.h	242;"	d
+crypto_stream_salsa20_tweet_NONCEBYTES	tweetnacl.h	243;"	d
+crypto_stream_salsa20_tweet_VERSION	tweetnacl.h	246;"	d
+crypto_stream_salsa20_xor	tweetnacl.cpp	/^int crypto_stream_salsa20_xor(u8 *c,const u8 *m,u64 b,const u8 *n,const u8 *k)$/;"	f
+crypto_stream_salsa20_xor	tweetnacl.h	248;"	d
+crypto_stream_xor	tweetnacl.cpp	/^int crypto_stream_xor(u8 *c,const u8 *m,u64 d,const u8 *n,const u8 *k)$/;"	f
+crypto_stream_xor	tweetnacl.h	226;"	d
+crypto_stream_xsalsa20	tweetnacl.h	236;"	d
+crypto_stream_xsalsa20_IMPLEMENTATION	tweetnacl.h	241;"	d
+crypto_stream_xsalsa20_KEYBYTES	tweetnacl.h	238;"	d
+crypto_stream_xsalsa20_NONCEBYTES	tweetnacl.h	239;"	d
+crypto_stream_xsalsa20_VERSION	tweetnacl.h	240;"	d
+crypto_stream_xsalsa20_tweet_KEYBYTES	tweetnacl.h	231;"	d
+crypto_stream_xsalsa20_tweet_NONCEBYTES	tweetnacl.h	232;"	d
+crypto_stream_xsalsa20_tweet_VERSION	tweetnacl.h	235;"	d
+crypto_stream_xsalsa20_xor	tweetnacl.h	237;"	d
+crypto_verify	tweetnacl.h	254;"	d
+crypto_verify_16	tweetnacl.cpp	/^int crypto_verify_16(const u8 *x,const u8 *y)$/;"	f
+crypto_verify_16	tweetnacl.h	261;"	d
+crypto_verify_16_BYTES	tweetnacl.h	262;"	d
+crypto_verify_16_IMPLEMENTATION	tweetnacl.h	264;"	d
+crypto_verify_16_VERSION	tweetnacl.h	263;"	d
+crypto_verify_16_tweet_BYTES	tweetnacl.h	258;"	d
+crypto_verify_16_tweet_VERSION	tweetnacl.h	260;"	d
+crypto_verify_32	tweetnacl.cpp	/^int crypto_verify_32(const u8 *x,const u8 *y)$/;"	f
+crypto_verify_32	tweetnacl.h	268;"	d
+crypto_verify_32_BYTES	tweetnacl.h	269;"	d
+crypto_verify_32_IMPLEMENTATION	tweetnacl.h	271;"	d
+crypto_verify_32_VERSION	tweetnacl.h	270;"	d
+crypto_verify_32_tweet_BYTES	tweetnacl.h	265;"	d
+crypto_verify_32_tweet_VERSION	tweetnacl.h	267;"	d
+crypto_verify_BYTES	tweetnacl.h	255;"	d
+crypto_verify_IMPLEMENTATION	tweetnacl.h	256;"	d
+crypto_verify_PRIMITIVE	tweetnacl.h	253;"	d
+crypto_verify_VERSION	tweetnacl.h	257;"	d
+cswap	tweetnacl.cpp	/^sv cswap(gf p[4],gf q[4],u8 b)$/;"	f
+decrypt	sample.cpp	/^decrypt(Content encrypted_buffer, unsigned char *client_public_key, unsigned char *server_secret_key)$/;"	f
+dl64	tweetnacl.cpp	/^static u64 dl64(const u8 *x)$/;"	f	file:
+encrypt	sample.cpp	/^encrypt(unsigned char *string, size_t ks, unsigned char *server_public_key, unsigned char *client_secret_key)$/;"	f
+error	tools.cpp	/^void error(int code, const char message[]) {$/;"	f
+errorf	tools.cpp	/^void errorf(int code, const char message[], char arg[]) {$/;"	f
+gf	tweetnacl.cpp	/^typedef i64 gf[16];$/;"	t	file:
+gf0	tweetnacl.cpp	/^  gf0,$/;"	v	file:
+gf1	tweetnacl.cpp	/^  gf1 = {1},$/;"	v	file:
+i64	tweetnacl.cpp	/^typedef long long i64;$/;"	t	file:
+inv25519	tweetnacl.cpp	/^sv inv25519(gf o,const gf i)$/;"	f
+iv	tweetnacl.cpp	/^static const u8 iv[64] = {$/;"	v	file:
+ld32	tweetnacl.cpp	/^static u32 ld32(const u8 *x)$/;"	f	file:
+minusp	tweetnacl.cpp	/^static const u32 minusp[17] = {$/;"	v	file:
+modL	tweetnacl.cpp	/^sv modL(u8 *r,i64 x[64])$/;"	f
+neq25519	tweetnacl.cpp	/^static int neq25519(const gf a, const gf b)$/;"	f	file:
+output_key	sample.cpp	/^void output_key(char *str, unsigned char key[], int key_size) {$/;"	f
+pack	tweetnacl.cpp	/^sv pack(u8 *r,gf p[4])$/;"	f
+pack25519	tweetnacl.cpp	/^sv pack25519(u8 *o,const gf n)$/;"	f
+par25519	tweetnacl.cpp	/^static u8 par25519(const gf a)$/;"	f	file:
+pow2523	tweetnacl.cpp	/^sv pow2523(gf o,const gf i)$/;"	f
+read_file	tools.cpp	/^Content read_file(char filename[]) {$/;"	f
+reduce	tweetnacl.cpp	/^sv reduce(u8 *r)$/;"	f
+scalarbase	tweetnacl.cpp	/^sv scalarbase(gf p[4],const u8 *s)$/;"	f
+scalarmult	tweetnacl.cpp	/^sv scalarmult(gf p[4],gf q[4],const u8 *s)$/;"	f
+sel25519	tweetnacl.cpp	/^sv sel25519(gf p,gf q,int b)$/;"	f
+set25519	tweetnacl.cpp	/^sv set25519(gf r, const gf a)$/;"	f
+sigma	tweetnacl.cpp	/^static const u8 sigma[16] = "expand 32-byte k";$/;"	v	file:
+sigma0	tweetnacl.cpp	/^static u64 sigma0(u64 x) { return R(x, 1) ^ R(x, 8) ^ (x >> 7); }$/;"	f	file:
+sigma1	tweetnacl.cpp	/^static u64 sigma1(u64 x) { return R(x,19) ^ R(x,61) ^ (x >> 6); }$/;"	f	file:
+size	tools.cpp	/^    size_t size;$/;"	m	struct:content	file:
+size	tools.h	/^        size_t size;$/;"	m	struct:content
+st32	tweetnacl.cpp	/^sv st32(u8 *x,u32 u)$/;"	f
+sv	tweetnacl.cpp	3;"	d	file:
+ts64	tweetnacl.cpp	/^sv ts64(u8 *x,u64 u)$/;"	f
+u32	tweetnacl.cpp	/^typedef unsigned long u32;$/;"	t	file:
+u64	tweetnacl.cpp	/^typedef unsigned long long u64;$/;"	t	file:
+u8	tweetnacl.cpp	/^typedef unsigned char u8;$/;"	t	file:
+unpack25519	tweetnacl.cpp	/^sv unpack25519(gf o, const u8 *n)$/;"	f
+unpackneg	tweetnacl.cpp	/^static int unpackneg(gf r[4],const u8 p[32])$/;"	f	file:
+vn	tweetnacl.cpp	/^static int vn(const u8 *x,const u8 *y,int n)$/;"	f	file:

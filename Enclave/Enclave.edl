@@ -46,7 +46,7 @@ enclave {
                 int ocall_feof([user_check] FILE *stream);
                 int ocall_rand();                                               // done in sgx
                 void ocall_srand(unsigned int seed);                            // done in sgx
-                void ocall_send_packet([in, out, count=1, size=len]unsigned char *pkt, int len, int id);
+                void ocall_send_packet(int id, [in, out, count=1, size=len]unsigned char *pkt, size_t len);
                 char *recover_filename([user_check]FILE *f);
                 int ocall_get_file_size([user_check] FILE *f);
                 long int ocall_mktime([in, out, count = 1, size=8] struct tm *tptr);

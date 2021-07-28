@@ -1,3 +1,5 @@
+#ifndef TOOLS_H
+#define TOOLS_H
     typedef enum { false, true } bool;
     extern void error(int code, char message[]);
     extern void errorf(int code, char message[], char arg[]);
@@ -14,3 +16,4 @@
     typedef struct content Content;
 
     extern Content read_file(char filename[]);
+#endif

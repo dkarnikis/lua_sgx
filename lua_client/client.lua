@@ -45,7 +45,7 @@ local function offload (...)
     local item = config[1]
     -- remote 'local lua'
     if mode == 0 then
-        client.lsend_code(item.socket, json); --, item.aes_key);
+        client.lsend_code(item.socket, json);
         res = client.lrecv_response(item.socket);
     -- remote 'e2e encrypted sgx'
     elseif mode == 1 then
@@ -53,7 +53,7 @@ local function offload (...)
         res = client.lrecv_response(item.socket, item.aes_key);
     -- remote 'local sgx'
     elseif mode == 2 then
-        client.lsend_code(item.socket, json); --, item.aes_key);
+        client.lsend_code(item.socket, json);
         res = client.lrecv_response(item.socket);
     end
     timer = client.lrecv_response(item.socket);

@@ -167,6 +167,7 @@ usage(void)
 void
 l_setup_client_handshake(sgx_enclave_id_t eid, int n_socket)
 {
+
     sgx_status_t ret;
     int val_result;
     unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
@@ -186,6 +187,7 @@ l_setup_client_handshake(sgx_enclave_id_t eid, int n_socket)
 #endif
         //keys_created = 1;
     }
+
     clock_gettime(CLOCK_REALTIME, &tsgx_stop);
     sgx_time += get_time_diff(tsgx_stop, tsgx_start) / ns;
     /* Receive the clients public Key */

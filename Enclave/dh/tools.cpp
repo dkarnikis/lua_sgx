@@ -56,7 +56,6 @@ void read_key(char filename[], unsigned char key[], int key_size) {
 }
 
 #endif
-typedef struct content Content;
 
 Content read_file(char filename[]) {
     FILE *f = fopen(filename, "rb");
