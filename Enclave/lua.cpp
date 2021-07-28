@@ -580,7 +580,7 @@ int pmain (lua_State *L) {
 const char *parse_string = \
 "json = dkjson.decode(json);"\
 "local f = getf_from_lib(_G[json[1]], json[2]);"\
-"print(f(json[3]));";
+"io.write(f(json[3]));";
 
 static void fatal(const char* message) {
   fprintf(stderr,"%s\n", message);

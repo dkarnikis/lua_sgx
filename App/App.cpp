@@ -23,10 +23,10 @@
 #include "nw.h"
 
 
-#include "../lua-5.3.5/lprefix.h"
-#include "../lua-5.3.5/lua.h"
-#include "../lua-5.3.5/lauxlib.h"
-#include "../lua-5.3.5/lualib.h"
+#include "lua_lib/lprefix.h"
+#include "lua_lib/lua.h"
+#include "lua_lib/lauxlib.h"
+#include "lua_lib/lualib.h"
 
 
 #define LOCATION __LINE__,__FILE__,__func__
@@ -117,7 +117,7 @@ main (int argc, char **argv)
     /*
      * Get arguments
      */
-    while ((opt = getopt(argc, argv, "p:e:l:idh")) != -1) { 
+    while ((opt = getopt(argc, argv, "p:e:tidh")) != -1) { 
         switch (opt) {
 			case 'e':
 				enclave_path = strdup(optarg);

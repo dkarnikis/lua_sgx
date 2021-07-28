@@ -38,6 +38,7 @@ static int luaB_print (lua_State *L) {
     if (disable_execution_output == 0) { 
         if (i>1) lua_writestring("\t", 1);
         lua_writestring(s, l);
+        lua_writeline();
     }
     if (output_file != NULL)  {
         if (i >1) 
@@ -46,7 +47,6 @@ static int luaB_print (lua_State *L) {
     }
     lua_pop(L, 1);  /* pop result */
   }
-  //lua_writeline();
   return 0;
 }
 

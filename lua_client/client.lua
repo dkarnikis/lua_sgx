@@ -83,7 +83,7 @@ function wrapper (obj, lib_name)
             return res
         end
     elseif type(obj) == "table" then
-        local lib_name = 0
+        local lib_name = nil
         for k,v in pairs(_G) do
             if v == obj then
                 lib_name = k
