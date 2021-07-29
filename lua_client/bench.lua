@@ -185,7 +185,7 @@ end
 
 function do_touches()
     local lim = 1024 * 1024 * 4
-    local i = 1024
+    local i = 32
     while i <= lim do
         do_remote(opt.reads, 'opt.reads', 'reads', i)
         do_remote(opt.writes, 'opt.writes', 'writes', i)
@@ -225,7 +225,6 @@ function do_freads()
 end
 
 local data = string.rep('x', 1000000)
---do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
 -- completed
 do_algo()
 do_crypto(data)
