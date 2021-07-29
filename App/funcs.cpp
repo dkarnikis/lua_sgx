@@ -4,9 +4,13 @@
 #include <stdlib.h>
 #include <err.h>
 #include "nw.h"
+#include <dirent.h>
+#include <stddef.h>
+#include <sys/types.h>
 #include "../Enclave/dh/tools.h"
 #include "../Enclave/dh/tweetnacl.h"
-#define ENCLAVE_FILE "enclave.signed.so"
+
+
 #define LOCATION __LINE__,__FILE__,__func__
 
 short keys_created = 0;
@@ -177,16 +181,13 @@ l_setup_client_handshake(sgx_enclave_id_t eid, int n_socket)
     memset(client_public_key, 0, crypto_box_PUBLICKEYBYTES);
     memset(server_public_key, 0, crypto_box_PUBLICKEYBYTES);
     clock_gettime(CLOCK_REALTIME, &tsgx_start);
-    /* creates keys if we are on single enclave_instance */
-    if (keys_created == 0) {// || single_enclave_instance == 0) {
-        ret = ecall_gen_pkeys(eid);
+    // creates keys if we are on single enclave_instance
+    ret = ecall_gen_pkeys(eid);
 #ifdef DEBUG
-        if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to gen server keys", 1))
-            goto cleanup;
-        fprintf(stdout, "Recieving client key\n");
+    if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to gen server keys", 1))
+        goto cleanup;
+    fprintf(stdout, "Recieving client key\n");
 #endif
-        //keys_created = 1;
-    }
 
     clock_gettime(CLOCK_REALTIME, &tsgx_stop);
     sgx_time += get_time_diff(tsgx_stop, tsgx_start) / ns;
@@ -263,4 +264,35 @@ l_print_timers(int print_nw)
         /* exec only time */
         fprintf(stdout, "EXEC: %f\n", exec_time);
     }
+}
+
+int count_open_fds(void) {
+    DIR *dp = opendir("/proc/self/fd");
+    struct dirent *de;
+    int count = -3; // '.', '..', dp
+
+    if (dp == NULL)
+        return -1;
+
+    while ((de = readdir(dp)) != NULL)
+        count++;
+
+    (void)closedir(dp);
+
+    return count;
+}
+
+/*
+ * Close all the open file descriptors from the next from s
+ */ 
+void
+close_open_fds(int s)
+{
+    int count;
+    int i;
+    count = count_open_fds();
+    for (i = s + 1; i < count; i++) {
+        close(i);
+    }
+
 }

@@ -1,3 +1,4 @@
+#! /usr/bin/lua
 local client = require('foo')
 utils = require("utils")
 package.path = package.path .. ";../libs/?.lua"

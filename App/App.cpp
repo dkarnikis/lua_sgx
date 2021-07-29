@@ -30,6 +30,7 @@
 
 
 #define LOCATION __LINE__,__FILE__,__func__
+void close_open_fds(int s);
 char code_file[20];
 /*
  * The enclave where enclave.signed.so is stored
@@ -48,6 +49,7 @@ pthread_mutex_t clients_lock;
  * The enclave id
  */
 sgx_enclave_id_t unique_eid;
+int welcome_socket;
 /*
  * The socket that the main client connects to
  */
@@ -104,7 +106,6 @@ main (int argc, char **argv)
     int opt;                        /* var for parsing args                 */
     char *input_file;               /* the file to open for execution       */
     int encryption_mode = 0;
-	int welcome_socket;
     /* init */
 	(void)(ret);
     disable_execution_output = 0;
@@ -159,16 +160,20 @@ start:
     if (encryption_mode == 0) {
         // execute on the lua vm
         spawn_lua_og(new_socket);
+        close_open_fds(welcome_socket);
         goto start;
     } else if (encryption_mode == 1) {
         // sgx opts with encryption
         sgx_time = 0;
         spawn_lua_enclave(new_socket, 0);
+        //ecall_close_lua_state(unique_eid);
         sgx_destroy_enclave(unique_eid);
+        close_open_fds(welcome_socket);
         goto start1;
     } else if (encryption_mode == 2) {
         // sgx local without encryption
         spawn_lua_enclave(new_socket, 1);
+        close_open_fds(welcome_socket);
         goto start1;
     }
     free(input_file);
@@ -183,43 +188,28 @@ start:
 int
 receive_modules(int n_socket)
 {
-    int i, k;                           /* counters                         */
-    int module_name_len;                /* module name len                  */
-    char *module_data;                  /* will hold the data of the module */
-    char *module_name;                  /* will hold the name of the module */
-    char *buffer;
-    FILE *module;
-    int number_of_modules;
     int module_len;
-    i = k = module_name_len = number_of_modules = module_len = 0;
-    /* receive modules of the user */
-    recv_num(n_socket, &number_of_modules);
-    for (i = 0; i < number_of_modules; i++){
-        module_name = module_data = NULL;
-        /* got the module size */
-        recv_num(n_socket, &module_len);
-#ifdef DEBUG
-        fprintf(stdout, "module size = %d\n", module_len);
-#endif
-        /* allocate the buffer to hold the module   */
-        module_data = (char *)calloc(1, module_len * sizeof(char));
-#ifdef DEBUG
-        check_error(module_data, LOCATION, "Failed to allocate module data");
-#endif
-        // receive the module
-        if (recv_data(n_socket, module_data, module_len) == -1)
-            return -1;
-        recv_num(n_socket, &module_name_len);
-        buffer = (char *)calloc(1, module_name_len);
-        // receive the module name
-        if (recv_data(n_socket, buffer, module_name_len) == -1)
-            return -1;
-        module = fopen(buffer, "w");
-		fwrite(module_data, 1, module_len, module);
-        fclose(module);
-        free(module_name);
-        free(module_data);
-    }
+    int modules;
+    int module_name_len;
+    FILE *module;
+    char *buffer, *buf;
+    module_len = modules = module_name_len = 0;
+    // modules count
+    recv_num(n_socket, &modules);
+    if (modules == 0)
+        return 0;
+    buf = recv_file(n_socket, &module_len);
+    // receive module name
+    recv_num(n_socket, &module_name_len);
+    // allocate the filename
+    buffer = (char *)calloc(1, module_name_len);
+    // receive the module name
+    recv_data(n_socket, buffer, module_name_len);
+    module = fopen(buffer, "w");
+    fwrite(buf, 1, module_len, module);
+    fclose(module);
+    free(buf);
+    free(buffer);
     return 0;
 }
 
@@ -253,15 +243,9 @@ spawn_lua_enclave(int n_socket, int local_mode)
 	 * Store the key in the Enclave, generate the 
 	 * secret AES key and send it to the server
 	 */
-
-    if (local_mode == 0) {
+    if (local_mode == 0)
         l_setup_client_handshake(unique_eid, n_socket);
-    }
     val_result = receive_modules(n_socket);
-#ifdef DEBUG
-    if (val_error(val_result, 0, LOCATION, "Failed to receive modules", 1))
-        goto cleanup;
-#endif
     e2e_time = 0;
     while (1) { 
         buf = recv_file(n_socket, &encrypted_code_len);
@@ -276,7 +260,7 @@ spawn_lua_enclave(int n_socket, int local_mode)
             sgx_time = 0;
         }
         network_time = 0;
-        // receive the code file
+        // receive the code file$
         encrypted_file = fopen(code_file, "w");
         // write the encrypted code buffer into the base lua file
         fwrite(buf, sizeof(char), encrypted_code_len, encrypted_file);
@@ -300,7 +284,6 @@ spawn_lua_enclave(int n_socket, int local_mode)
             l_print_timers(1);
         }
         send_timers(timer_data, n_socket);
-        ocall_clean_fd();
     }
 #ifdef DEBUG
     /* cleanup the connection info */

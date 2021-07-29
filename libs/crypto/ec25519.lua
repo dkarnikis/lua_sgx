@@ -302,9 +302,15 @@ a common session key (for a symmetric encryption algorithm).
   
   
 ]]
-
+local function run(arg)
+    local k32=('k'):rep(32)
+    for i = 1, 100 do 
+        local et = crypto_scalarmult_base(k32, base)
+    end
+end
 
 return {
+    run = run,
 	crypto_scalarmult = crypto_scalarmult,
 	crypto_scalarmult_base = crypto_scalarmult_base,
 	--

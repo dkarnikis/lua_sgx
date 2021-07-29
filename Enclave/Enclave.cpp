@@ -1,7 +1,6 @@
 #include "Enclave_t.h"
 #include "dh/tweetnacl.h"
 #include "sgx_defs.h"
-#include <atomic>
 #include "sgx_trts.h"
 #include "lua.h"
 #include "sgx_tcrypto.h"
@@ -18,13 +17,12 @@
 /* size of the aes encryption key in bytes */
 #define KEY_SIZE 16
 #define CHUNK_LEN 4096
+
 /* the response of the server back to the client */
 std::string server_response;
 /* the keypair of the server */
 unsigned char server_public_key[crypto_box_PUBLICKEYBYTES];
 unsigned char server_private_key[crypto_box_SECRETKEYBYTES];
-int argc;                               /* number of lua arguments                  */
-int count = 0;                          /* index for arguments                      */  
 int disable_execution_output = 0;       /* dont print the lua output on screen      */
 unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
 unsigned char encryption_key[KEY_SIZE * 2];
@@ -46,6 +44,7 @@ char *getc_buffer = NULL;
 void bootstrap_lua();
 
 unsigned char *decrypt_chunks(unsigned char *enc, size_t data_size);
+
 
 void
 print_key(const char *s, uint8_t *key, int size)
@@ -137,7 +136,6 @@ ecall_init(int di, FILE *stdi, FILE *stdo, FILE *stde)
     stdout = stdo;
     stderr = stde;
     disable_execution_output = di;
-	count++;
     bootstrap_lua();
 }
 
@@ -147,40 +145,34 @@ ecall_init(int di, FILE *stdi, FILE *stdo, FILE *stde)
 void
 ecall_execute(int id, int local_exec)
 {
+    char *response;
     if (local_exec == 1) 
         bootstrap_lua();
     // if local_exec = 0, use encryption, else all plain text
     enclave_bootstrap = local_exec;
-    int server_response_len;
-    char *response;
-    char *first_data;                   /* code of client to be read from server */
-    response = first_data = NULL;
-    count = 1;
+    response = NULL;
     char **argv;                            /* the actual arguments of lua              */
     argv = (char **)calloc(4, sizeof(char *));
     argv[0] = strdup("code.lua");
-    argv[1] = strdup("code.lua");
+    argv[1] = argv[0]; 
     argv[2] = NULL;
-    count = 3;
     // trigger code execution
-    main(count, argv);
+    main(3, argv);
     /* if the user has not requested any prints, we send empty character back */
     if (strlen(server_response.c_str()) == 0)
         server_response = " ";
-    server_response_len = server_response.length();
-    response = (char *)calloc(1, sizeof(char) * server_response_len + 1);
-    strncpy(response, server_response.c_str(), server_response_len + 1);
+    response = (char *)calloc(1, sizeof(char) * server_response.length() + 1);
+    strncpy(response, server_response.c_str(), server_response.length() + 1);
     if (local_exec == 0) {
-        unsigned char *xd = decrypt_chunks((unsigned char *)response, server_response_len);
-        ocall_send_packet(id, (unsigned char *)xd, server_response_len);
+        unsigned char *xd = decrypt_chunks((unsigned char *)response, server_response.length());
+        ocall_send_packet(id, (unsigned char *)xd, server_response.length());
         free(xd);
     } else 
-        ocall_send_packet(id, (unsigned char *)response, server_response_len + 1);
+        ocall_send_packet(id, (unsigned char *)response, server_response.length() + 1);
 	// cleanup time
     free(response);
 	server_response = "";
     free(argv[0]);
-    free(argv[1]);
     free(argv);
 	counter = -1;
 	getc_buffer = NULL;
@@ -406,7 +398,7 @@ size_t
 fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
     size_t a;
-    char *xd;
+    unsigned char *plain_data;
     memset(ptr, 0, size * nmemb);
     /* 
      * lua parses the first char on the file for some weird reason
@@ -417,13 +409,14 @@ fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
     if (a == 0 || enclave_bootstrap == 1) 
         return a;
     // we are in encryption mode, decrypt the buffer
-    xd = decrypt_chunks(ptr, a);
+    plain_data = decrypt_chunks((unsigned char *)ptr, a);
+#if 1
     if (a == 1)
-        printf("%s\n", xd);
-
+        printf("%s\n", plain_data);
+#endif
     // copy the buffer into lua code buffer(ptr)
-    memcpy(ptr, xd, a);
-    free(xd);
+    memcpy(ptr, plain_data, a);
+    free(plain_data);
     return a;
 }
 

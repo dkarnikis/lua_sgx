@@ -10,7 +10,6 @@
 #include <thread>       
 #include <locale.h>
 #include <vector>
-std::vector<FILE *> opened_files;
 
 int
 ocall_get_file_size(FILE *file)
@@ -135,7 +134,6 @@ ocall_fopen(const char *filename, const char *mode)
 #endif
     FILE *fp;
     fp = fopen(filename, mode); 
-    opened_files.push_back(fp);
     return fp;
 }	
 
@@ -201,15 +199,7 @@ int
 ocall_fclose(FILE *ptr)
 {
 	int a;
-#ifdef DEBUG1
-	printf("%s\n", __FUNCTION__);
-#endif
     a = fclose(ptr);
-#if 1
-    for (long unsigned int i = 0; i < opened_files.size(); i++)
-	    if (opened_files.at(i) == ptr)
-	        opened_files.erase(opened_files.begin() + i);
-#endif
 	return a;
 }
 
@@ -366,15 +356,3 @@ ocall_pclose(FILE *stream)
     return pclose(stream);
 }
 
-void
-ocall_clean_fd()
-{
-    unsigned long i;
-    for (i = 0; i < opened_files.size(); i++) {
-        if (opened_files.at(i)) {
-            fclose(opened_files.at(i));
-            opened_files.at(i) = NULL;
-        }
-    }
-    opened_files.clear();
-}

@@ -1,6 +1,9 @@
 package.path = package.path .. ";libs/?.lua"
 package.path = package.path .. ";libs/crypto/?.lua"
 package.path = package.path .. ";libs/opti/?.lua"
+package.path = package.path .. ";libs/medium/?.lua"
+package.path = package.path .. ";libs/heavy/?.lua"
+package.path = package.path .. ";libs/light/?.lua"
 
 -- see if the file exists
 function file_exists(file)

@@ -4,7 +4,7 @@ package.path = package.path .. ";../libs/heavy/?.lua"
 package.path = package.path .. ";../libs/medium/?.lua"
 package.path = package.path .. ";../libs/light/?.lua"
 package.path = package.path .. ";../libs/opti/?.lua"
-default_loops = 5
+default_loops = 10
 local loops = default_loops
 -- the module name we are going to offload
 local module_file_name = nil
@@ -116,9 +116,9 @@ function get_avg_time(func_name)
 end
 
 function do_remote(func_ptr, lib_func, func_name, ...)
-    --local lua_rem = do_bench(func_ptr, lib_func, func_name, 0, ...)
+    local lua_rem = do_bench(func_ptr, lib_func, func_name, 0, ...)
     local sgx_rem = do_bench(func_ptr, lib_func, func_name, 1, ...)
-    --local sgx_local = do_bench(func_ptr, lib_func, func_name, 2, ...)
+    local sgx_local = do_bench(func_ptr, lib_func, func_name, 2, ...)
     --print('Bench Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC')
     --print(func_name, lua_rem.exec, sgx_local.e2e, sgx_local.init, sgx_local.exec, lua_rem.e2e, lua_rem.nw, lua_rem.init, lua_rem.exec,
     --    sgx_rem.e2e, sgx_rem.nw, sgx_rem.init, sgx_rem.exec)
@@ -210,19 +210,17 @@ end
 -- start printing from 10K to 1M
 function do_freads()
     local lim = 4 * 1024 * 1024
-    local i = 32
+    local i = 1024
     module_file_name = 'out'
     local file = io.open ('out', 'w')
-    local data = string.rep('x', 32 * 1024 * 1024)..'a'
+    local data = string.rep('x', 32 * 1024 * 1024) .. 'a' -- * 1024 * 1024)..'a'
     file:write(data)
     io.close(file)
-    loops = 2
     while i <= lim do
         print(i)
         do_remote(opt.fread, 'opt.fread', 'fread', i)
         i = i * 2
     end
-    loops = default_loops
     module_file_name = nil
 end
 
@@ -233,4 +231,4 @@ do_algo()
 do_crypto(data)
 do_touches()
 do_prints()
---do_freads()
+do_freads()

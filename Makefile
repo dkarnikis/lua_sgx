@@ -97,7 +97,7 @@ Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/i
 Enclave_C_Flags := $(Enclave_Include_Paths) -nostdinc -fvisibility=hidden -std=gnu++11 -fpie -ffunction-sections -fdata-sections   -fpermissive $(LUA_FLAGS)
 
 
-Enclave_Cpp_Flags := $(Enclave_C_Flags) -nostdinc++ -fpermissive -std=gnu++11 $(LUA_FLAGS) #-g -DDEBUG -std=c++11 
+Enclave_Cpp_Flags := $(Enclave_C_Flags) -nostdinc++ -fpermissive -std=gnu++11 $(LUA_FLAGS)# -g -DDEBUG -std=c++11 
 
 
 Enclave_Link_Flags := -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
