@@ -21,14 +21,10 @@
 #include "../Enclave/dh/tweetnacl.h"
 #include "funcs.h"
 #include "nw.h"
-
-
 #include "lua_lib/lprefix.h"
 #include "lua_lib/lua.h"
 #include "lua_lib/lauxlib.h"
 #include "lua_lib/lualib.h"
-
-
 #define LOCATION __LINE__,__FILE__,__func__
 void close_open_fds(int s);
 char code_file[20];
@@ -94,7 +90,7 @@ send_timers(char timer_data[100], int n_socket)
 {
     memset(timer_data, '\0', 100);
     sprintf(timer_data, "%.3f %.3f %.3f %.3f", e2e_time, network_time, sgx_time, exec_time);
-    ocall_send_packet(n_socket, timer_data, 100);
+    ocall_send_packet(n_socket, (unsigned char *)timer_data, 100);
 }
 
 extern "C" int lua_main(int argc, char **argv, int deo);
@@ -308,7 +304,6 @@ spawn_lua_og(int n_socket)
     FILE *output_file;
     size_t output_size;
     char *output_data;
-    /* init the values */
     network_time = exec_time = 0.0f;
     (void)val_result;
     FILE *file;
@@ -322,7 +317,11 @@ spawn_lua_og(int n_socket)
         goto cleanup;
 #endif
     e2e_time = 0;
-    while (buf = recv_file(n_socket, &code_len)) {
+    while (1) {
+        // receive the code file
+        buf = recv_file(n_socket, &code_len);
+        if (!buf)
+            break;
         network_time = 0;
         sgx_time = 0;
 
@@ -348,18 +347,19 @@ spawn_lua_og(int n_socket)
         output_file = fopen("output", "r");
         output_size = ocall_get_file_size(output_file);
         output_data = (char *)calloc(1, output_size + 1);
-        fread(output_data, 1, output_size, output_file);
+        // read the output data of the execution
+        (void)!fread(output_data, 1, output_size, output_file);
         fclose(output_file);
-        ocall_send_packet(n_socket, output_data, output_size + 1);
+        ocall_send_packet(n_socket, (unsigned char *)output_data, output_size + 1);
         clock_gettime(CLOCK_REALTIME, &texec_stop);
-        // construct the timer data 
+        // clean the buffers
         free(buf);
         free(output_data);
         free(argv[0]);
         exec_time = get_time_diff(texec_stop, texec_start) / ns;
         e2e_time = get_time_diff(texec_stop, te2e_start) / ns;   
         if (disable_timer_print == 0) {
-            /* print network as well */
+            // print network as well
             l_print_timers(1);
         }
         send_timers(timer_data, n_socket);

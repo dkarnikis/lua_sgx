@@ -36,7 +36,7 @@ else
         SGX_COMMON_CFLAGS += 
 endif
 
-LUA_FLAGS = -Ofast -Wall #-DDEBUG
+LUA_FLAGS = -Ofast -Wall -Wno-misleading-indentation -Wno-sign-compare -Wno-stringop-overflow
 SGX_COMMON_FLAGS += -Wall -Wextra -Winit-self -Wpointer-arith -Wreturn-type \
                     -Waddress -Wsequence-point -Wformat-security \
                     -Wfloat-equal -Wundef -Wshadow \
@@ -94,7 +94,7 @@ Enclave_Cpp_Files := $(wildcard Enclave/*.cpp)  $(wildcard Enclave/dh/*.cpp)
 
 Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/libcxx
 
-Enclave_C_Flags := $(Enclave_Include_Paths) -nostdinc -fvisibility=hidden -std=gnu++11 -fpie -ffunction-sections -fdata-sections   -fpermissive $(LUA_FLAGS)
+Enclave_C_Flags := $(Enclave_Include_Paths) -nostdinc -fvisibility=hidden -fpie -ffunction-sections -fdata-sections   -fpermissive $(LUA_FLAGS)
 
 
 Enclave_Cpp_Flags := $(Enclave_C_Flags) -nostdinc++ -fpermissive -std=gnu++11 $(LUA_FLAGS)# -g -DDEBUG -std=c++11 

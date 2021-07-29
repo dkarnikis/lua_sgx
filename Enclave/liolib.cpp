@@ -515,9 +515,6 @@ static int read_line (lua_State *L, FILE *f, int chop) {
 static void read_all (lua_State *L, FILE *f) {
   size_t nr= 0;
   luaL_Buffer b;
-	int z;
-	//ocall_get_file_size(&z, f);
-	//fprintf(stdout, "File size = %d\n", z);
   	luaL_buffinit(L, &b);
 	int tmp = LUAL_BUFFERSIZE;
 #if 1
@@ -525,7 +522,7 @@ static void read_all (lua_State *L, FILE *f) {
 	char *p = luaL_prepbuffsize(&b, tmp);//LUAL_BUFFERSIZE1);
     nr = fread(p, sizeof(char), tmp, f);
     luaL_addsize(&b, nr);
-  } while (nr == (tmp));
+  } while (nr == (size_t)tmp);
 #endif
   
   luaL_pushresult(&b);  /* close buffer */

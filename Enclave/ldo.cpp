@@ -278,19 +278,6 @@ void luaD_hook (lua_State *L, int event, int line) {
 }
 
 
-static void callhook (lua_State *L, CallInfo *ci) {
-  int hook = LUA_HOOKCALL;
-  ci->u.l.savedpc++;  /* hooks assume 'pc' is already incremented */
-  if (isLua(ci->previous) &&
-      GET_OPCODE(*(ci->previous->u.l.savedpc - 1)) == OP_TAILCALL) {
-    ci->callstatus |= CIST_TAIL;
-    hook = LUA_HOOKTAILCALL;
-  }
-  luaD_hook(L, hook, -1);
-  ci->u.l.savedpc--;  /* correct 'pc' */
-}
-
-
 static StkId adjust_varargs (lua_State *L, Proto *p, int actual) {
   int i;
   int nfixargs = p->numparams;

@@ -233,7 +233,6 @@ l_setup_client_handshake(sgx_enclave_id_t eid, int n_socket)
     print_key("Client public Key: ", client_public_key, crypto_box_PUBLICKEYBYTES);
     print_key("Server public Key: ", server_public_key, crypto_box_PUBLICKEYBYTES);
 #endif
-	return NULL;
 #ifdef DEBUG
 cleanup:
 	printf("Failed\n");

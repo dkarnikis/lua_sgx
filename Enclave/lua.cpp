@@ -97,42 +97,7 @@ static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
 
-/*
-** Hook set by signal function to stop the interpreter.
-*/
-static void lstop (lua_State *L, lua_Debug *ar) {
-}
 
-
-/*
-** Function to be called at a C signal. Because a C signal cannot
-** just change a Lua state (as there is no proper synchronization),
-** this function only sets a hook that, when called, will stop the
-** interpreter.
-*/
-static void laction (int i) {
-}
-
-
-static void print_usage (const char *badoption) {
-  lua_writestringerror("%s: ", progname);
-  if (badoption[1] == 'e' || badoption[1] == 'l')
-    lua_writestringerror("'%s' needs argument\n", badoption);
-  else
-    lua_writestringerror("unrecognized option '%s'\n", badoption);
-  lua_writestringerror(
-  "usage: %s [options] [script [args]]\n"
-  "Available options are:\n"
-  "  -e stat  execute string 'stat'\n"
-  "  -i       enter interactive mode after executing 'script'\n"
-  "  -l name  require library 'name' into global 'name'\n"
-  "  -v       show version information\n"
-  "  -E       ignore environment variables\n"
-  "  --       stop handling options\n"
-  "  -        stop handling options and execute stdin\n"
-  ,
-  progname);
-}
 
 
 /*
@@ -542,10 +507,12 @@ int pmain (lua_State *L) {
   int args = collectargs(argv, &script);
   luaL_checkversion(L);  /* check that interpreter has correct version */
   if (argv[0] && argv[0][0]) progname = argv[0];
+#if 0
   if (args == has_error) {  /* bad arg? */
     print_usage(argv[script]);  /* 'script' has index of bad arg. */
     return 0;
   }
+#endif
   if (args & has_v)  /* option '-v'? */
     print_version();
   if (args & has_E) {  /* option '-E'? */

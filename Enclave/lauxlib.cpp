@@ -665,46 +665,10 @@ static int errfile (lua_State *L, const char *what, int fnameindex) {
   return LUA_ERRFILE;
 }
 
-
-static int skipBOM (LoadF *lf) {
-  const char *p = "\xEF\xBB\xBF";  /* UTF-8 BOM mark */
-  int c;
-  lf->n = 0;
-  do {
-    c = getc(lf->f);
-    if (c == EOF || c != *(const unsigned char *)p++) return c;
-    lf->buff[lf->n++] = c;  /* to be read by the parser */
-  } while (*p != '\0');
-  lf->n = 0;  /* prefix matched; discard it */
-  return getc(lf->f);  /* return next character */
-}
-
-
-/*
-** reads the first character of file 'f' and skips an optional BOM mark
-** in its beginning plus its first line if it starts with '#'. Returns
-** true if it skipped the first line.  In any case, '*cp' has the
-** first "valid" character of the file (after the optional BOM and
-** a first-line comment).
-*/
-static int skipcomment (LoadF *lf, int *cp) {
-  int c = *cp = skipBOM(lf);
-  if (c == '#') {  /* first line is a comment (Unix exec. file)? */
-    do {  /* skip first line */
-      c = getc(lf->f);
-    } while (c != EOF && c != '\n');
-    *cp = getc(lf->f);  /* skip end-of-line, if present */
-    return 1;  /* there was a comment */
-  }
-  else return 0;  /* no comment */
-}
-
-
 LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
                                              const char *mode) {
     LoadF lf;
-    int status, readstatus;
-    int c;
+    int status;
     int fnameindex = lua_gettop(L) + 1;  /* index of filename on the stack */
     if (filename == NULL) {
         lua_pushliteral(L, "=stdin");
@@ -1016,8 +980,7 @@ static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
 	} else {
 		void *ptr1;
 		ptr1 = realloc(ptr, nsize);
-		if (ptr1)
-		return ptr1;
+        return ptr1;
 	}
 }
 

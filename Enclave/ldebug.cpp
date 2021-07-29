@@ -98,7 +98,7 @@ static void swapextra (lua_State *L) {
 
 
  int lua_gethookmask (lua_State *L) {
-  //return L->hookmask;
+  return 0;
 }
 
 

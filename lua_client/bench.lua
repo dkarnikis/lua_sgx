@@ -217,7 +217,6 @@ function do_freads()
     file:write(data)
     io.close(file)
     while i <= lim do
-        print(i)
         do_remote(opt.fread, 'opt.fread', 'fread', i)
         i = i * 2
     end

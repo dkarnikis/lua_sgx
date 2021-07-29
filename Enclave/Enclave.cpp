@@ -26,15 +26,12 @@ unsigned char server_private_key[crypto_box_SECRETKEYBYTES];
 int disable_execution_output = 0;       /* dont print the lua output on screen      */
 unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
 unsigned char encryption_key[KEY_SIZE * 2];
-
-
-unsigned char *enc;
+const char *code_file = "code.lua";
 /*
  * 1 = read everything without decrypting. Is used for local execution or
  * for bootstraping the lua instance for local/remote
  */
 int enclave_bootstrap = 1;
-
 int run_locally = 0;                    /* do we run locally                        */
 /* used for indexing into the vector code lines */
 int counter = -1;
@@ -42,7 +39,6 @@ int getc_len = 0;
 char *getc_buffer = NULL;
 
 void bootstrap_lua();
-
 unsigned char *decrypt_chunks(unsigned char *enc, size_t data_size);
 
 
@@ -145,35 +141,35 @@ ecall_init(int di, FILE *stdi, FILE *stdo, FILE *stde)
 void
 ecall_execute(int id, int local_exec)
 {
+    unsigned char *encrypted_results;
     char *response;
+    response = NULL;
+    encrypted_results = NULL;
     if (local_exec == 1) 
         bootstrap_lua();
     // if local_exec = 0, use encryption, else all plain text
     enclave_bootstrap = local_exec;
     response = NULL;
-    char **argv;                            /* the actual arguments of lua              */
-    argv = (char **)calloc(4, sizeof(char *));
-    argv[0] = strdup("code.lua");
-    argv[1] = argv[0]; 
+    const char *argv[4];
+    argv[0] = code_file;
+    argv[1] = code_file; 
     argv[2] = NULL;
     // trigger code execution
-    main(3, argv);
+    main(3, (char **)argv);
     /* if the user has not requested any prints, we send empty character back */
     if (strlen(server_response.c_str()) == 0)
         server_response = " ";
     response = (char *)calloc(1, sizeof(char) * server_response.length() + 1);
     strncpy(response, server_response.c_str(), server_response.length() + 1);
     if (local_exec == 0) {
-        unsigned char *xd = decrypt_chunks((unsigned char *)response, server_response.length());
-        ocall_send_packet(id, (unsigned char *)xd, server_response.length());
-        free(xd);
+        encrypted_results = decrypt_chunks((unsigned char *)response, server_response.length());
+        ocall_send_packet(id, (unsigned char *)encrypted_results, server_response.length());
+        free(encrypted_results);
     } else 
         ocall_send_packet(id, (unsigned char *)response, server_response.length() + 1);
 	// cleanup time
     free(response);
 	server_response = "";
-    free(argv[0]);
-    free(argv);
 	counter = -1;
 	getc_buffer = NULL;
 }
@@ -181,7 +177,6 @@ ecall_execute(int id, int local_exec)
 int
 fprintf(FILE *file, const char* fmt, ...)
 {
-    //#define BUFSIZE 1000
     int res;
     char buf[BUFSIZ] = {'\0'};
     va_list ap;
@@ -238,7 +233,7 @@ fputs(const char *str, FILE *stream)
 {
     int res;
     res = 0;
-    /* print the prompt only on local execution */
+    // print the prompt only on local execution
     ocall_fputs(&res, str, stream); 
     return res;
 }
@@ -254,8 +249,6 @@ fopen(const char *filename, const char *mode)
 void
 exit(int status_)
 {
-
-    printf("Error! x\n");
     abort();
     ocall_exit(status_);
 }
@@ -410,10 +403,6 @@ fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
         return a;
     // we are in encryption mode, decrypt the buffer
     plain_data = decrypt_chunks((unsigned char *)ptr, a);
-#if 1
-    if (a == 1)
-        printf("%s\n", plain_data);
-#endif
     // copy the buffer into lua code buffer(ptr)
     memcpy(ptr, plain_data, a);
     free(plain_data);
@@ -503,7 +492,6 @@ int
 rand(void)
 {
     int a;
-    //ocall_rand(&a);
 	sgx_read_rand((unsigned char *)&a, sizeof(int));
 	if (a < 0)
 		a*=-1;

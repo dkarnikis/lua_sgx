@@ -12,7 +12,7 @@ ssize_t
 l_write(int socket, void *data, int size)
 {
 	ssize_t d;
-	float t;
+	double t;
     clock_gettime(CLOCK_REALTIME, &tnw_start);
     d = write(socket, data, size);
     clock_gettime(CLOCK_REALTIME, &tnw_stop);
@@ -28,7 +28,7 @@ ssize_t
 l_read(int socket, void *data, int size)
 {
     ssize_t d;
-	float t;
+	double t;
     clock_gettime(CLOCK_REALTIME, &tnw_start);
     d = read(socket, data, size);
     clock_gettime(CLOCK_REALTIME, &tnw_stop);
@@ -40,15 +40,16 @@ l_read(int socket, void *data, int size)
 int
 l_create_socket(unsigned short int port)
 {
-    int welcome_socket, val_result;
+    int welcome_socket, val_result, enable;
     struct sockaddr_in server_addr;
 	(void)val_result;
+    enable = 1;
     welcome_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 #ifdef DEBUG
     if (valc_error(welcome_socket, 0, LOCATION, "Service socket failed", 1))
         abort();
 #endif
-    setsockopt(welcome_socket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
+    setsockopt(welcome_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     server_addr.sin_addr.s_addr = INADDR_ANY;
@@ -117,7 +118,7 @@ recv_data(int n_socket, char *buffer, int number)
     rx_bytes = 0;
     tmp_bytes = 0;
     while (rx_bytes < number) {
-        tmp_bytes = l_read(n_socket, &buffer[rx_bytes], (number-rx_bytes));
+        tmp_bytes = (int)l_read(n_socket, &buffer[rx_bytes], (number-rx_bytes));
 #ifdef DEBUG
         if (valc_error(tmp_bytes, 0, LOCATION, "Error receiving packet", 1))
             return -1;
