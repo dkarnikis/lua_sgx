@@ -691,4 +691,5 @@ lua_main (int argc, char **argv, int d)
         abort();
     }
     fclose(output_file);
+    lua_close(L);
 }
