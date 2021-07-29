@@ -116,9 +116,9 @@ function get_avg_time(func_name)
 end
 
 function do_remote(func_ptr, lib_func, func_name, ...)
-    local lua_rem = do_bench(func_ptr, lib_func, func_name, 0, ...)
+    --local lua_rem = do_bench(func_ptr, lib_func, func_name, 0, ...)
     local sgx_rem = do_bench(func_ptr, lib_func, func_name, 1, ...)
-    local sgx_local = do_bench(func_ptr, lib_func, func_name, 2, ...)
+    --local sgx_local = do_bench(func_ptr, lib_func, func_name, 2, ...)
     --print('Bench Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC')
     --print(func_name, lua_rem.exec, sgx_local.e2e, sgx_local.init, sgx_local.exec, lua_rem.e2e, lua_rem.nw, lua_rem.init, lua_rem.exec,
     --    sgx_rem.e2e, sgx_rem.nw, sgx_rem.init, sgx_rem.exec)
@@ -169,16 +169,16 @@ function do_algo()
 end
 
 function do_crypto(data)
---    do_remote(blake2b.hash, 'blake2b.hash', 'blake2b', data)
---    do_remote(chacha20.run, 'chacha20.run', 'chacha20', data)
---    do_remote(checksum.crc32, 'checksum.crc32', 'checksum', data)
---    do_remote(md5.hash, 'md5.hash', 'md5', data)
---    do_remote(norx.run, 'norx.run', 'norx', data)
---    do_remote(norx32.run, 'norx32.run', 'norx32', data)
---    do_remote(rabbit.run, 'rabbit.run', 'rabbit', data)
---    do_remote(rc4.run, 'rc4.run', 'rc4', data)
---    do_remote(salsa20.run, 'salsa20.run', 'salsa20', data)
---    do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
+    do_remote(blake2b.hash, 'blake2b.hash', 'blake2b', data)
+    do_remote(chacha20.run, 'chacha20.run', 'chacha20', data)
+    do_remote(checksum.crc32, 'checksum.crc32', 'checksum', data)
+    do_remote(md5.hash, 'md5.hash', 'md5', data)
+    do_remote(norx.run, 'norx.run', 'norx', data)
+    do_remote(norx32.run, 'norx32.run', 'norx32', data)
+    do_remote(rabbit.run, 'rabbit.run', 'rabbit', data)
+    do_remote(rc4.run, 'rc4.run', 'rc4', data)
+    do_remote(salsa20.run, 'salsa20.run', 'salsa20', data)
+    do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
     do_remote(sha2.sha512, 'sha2.sha512', 'sha512', data)
     do_remote(xtea.run, 'xtea.run', 'xtea', data)
 end
@@ -213,20 +213,24 @@ function do_freads()
     local i = 32
     module_file_name = 'out'
     local file = io.open ('out', 'w')
-    local data = string.rep('x', 32 * 1024 * 1024)
+    local data = string.rep('x', 32 * 1024 * 1024)..'a'
     file:write(data)
     io.close(file)
+    loops = 2
     while i <= lim do
+        print(i)
         do_remote(opt.fread, 'opt.fread', 'fread', i)
         i = i * 2
     end
+    loops = default_loops
     module_file_name = nil
 end
 
 local data = string.rep('x', 1000000)
---do_algo()
---do_crypto(data)
 --do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
---do_freads()
+-- completed
+do_algo()
+do_crypto(data)
 do_touches()
 do_prints()
+--do_freads()

@@ -183,7 +183,7 @@ local function run(plain)
     counter = 1
     nonce = ('n'):rep(8)
     k32 = ('k'):rep(32)
-    return encrypt(k32, counter, nonce, plain)
+    return salsa20_encrypt(k32, counter, nonce, plain)
 end
 ------------------------------------------------------------
 return {

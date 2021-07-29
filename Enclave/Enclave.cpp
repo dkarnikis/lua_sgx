@@ -121,14 +121,11 @@ ecall_send_aes_key(int id)
     gen_encryption_key(encryption_key, KEY_SIZE * 2);
     c = encrypt(encryption_key, KEY_SIZE, client_public_key, server_private_key);
     ocall_send_packet(id, c.bytes, c.size);
+    free(c.bytes);
     c = encrypt(&encryption_key[16], KEY_SIZE, client_public_key, server_private_key);
     ocall_send_packet(id, c.bytes, c.size);
+    free(c.bytes);
 }
-
-
-
-
-
 
 /*
  * initialize enclave flags for lua vm
@@ -150,6 +147,8 @@ ecall_init(int di, FILE *stdi, FILE *stdo, FILE *stde)
 void
 ecall_execute(int id, int local_exec)
 {
+    if (local_exec == 1) 
+        bootstrap_lua();
     // if local_exec = 0, use encryption, else all plain text
     enclave_bootstrap = local_exec;
     int server_response_len;
@@ -172,12 +171,12 @@ ecall_execute(int id, int local_exec)
     response = (char *)calloc(1, sizeof(char) * server_response_len + 1);
     strncpy(response, server_response.c_str(), server_response_len + 1);
     if (local_exec == 0) {
-        unsigned char *xd = decrypt_chunks((unsigned char *)response, server_response_len);//ecall_encrypt(response, server_response_len, id);
+        unsigned char *xd = decrypt_chunks((unsigned char *)response, server_response_len);
         ocall_send_packet(id, (unsigned char *)xd, server_response_len);
         free(xd);
     } else 
         ocall_send_packet(id, (unsigned char *)response, server_response_len + 1);
-	/* cleanup time */
+	// cleanup time
     free(response);
 	server_response = "";
     free(argv[0]);
@@ -372,7 +371,7 @@ code_decrypt(unsigned char *str, size_t len)
 {
     unsigned char n[crypto_stream_NONCEBYTES];
     unsigned char *cipher;
-    cipher = (unsigned char *)calloc(len, sizeof(unsigned char) + 1);
+    cipher = (unsigned char *)calloc(len, sizeof(unsigned char)+ 1);
     memset(n, 0, crypto_stream_NONCEBYTES);
     crypto_stream_xor(cipher, str, len, n, encryption_key);
     cipher[len] = '\0';
@@ -389,7 +388,7 @@ decrypt_chunks(unsigned char *enc, size_t data_size)
     unsigned char *plain_text, *cipher;
     len = CHUNK_LEN;
     rx_bytes = 0;
-    plain_text = (unsigned char *)calloc(1, data_size);
+    plain_text = (unsigned char *)calloc(1, data_size + 1);
     while (rx_bytes != data_size) {
         if ((rx_bytes + len) > data_size) {
             len = data_size - rx_bytes;
@@ -397,13 +396,8 @@ decrypt_chunks(unsigned char *enc, size_t data_size)
         cipher =  code_decrypt(&enc[rx_bytes], len);
         memcpy(&plain_text[rx_bytes], cipher, len);
         rx_bytes += len;
-        cipher[len] = '\0';
-#ifdef DEBUG
-        printf("|%.*s|\n", len, cipher);
-#endif
         free(cipher);
     }
-    //printf("||||||%.*s||||||\n", data_size, plain_text);
     return plain_text;
 }
 
@@ -423,8 +417,10 @@ fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
     if (a == 0 || enclave_bootstrap == 1) 
         return a;
     // we are in encryption mode, decrypt the buffer
-    //xd = decrypt_chunks((unsigned char *)ptr, a);
     xd = decrypt_chunks(ptr, a);
+    if (a == 1)
+        printf("%s\n", xd);
+
     // copy the buffer into lua code buffer(ptr)
     memcpy(ptr, xd, a);
     free(xd);

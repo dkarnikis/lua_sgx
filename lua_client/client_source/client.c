@@ -320,14 +320,9 @@ get_file_size(FILE *file)
     return size;
 }
 
-
-
-
-
 void
 lsend_code_encrypted(int sock, char *data, int size, unsigned char *aes_key)
 {
-
     unsigned char *encrypted = encrypt_chunk(data, size, aes_key);
     send_data(sock, encrypted, size);
     free(encrypted);
@@ -339,39 +334,26 @@ lsend_file_code(int sock, char *fname, unsigned char *aes_key)
     FILE *code;
     int size;
     char *data;
-    /* read file contents */
+    // read file contents
     code = fopen(fname, "r");
     if (code == NULL) {
         printf("Cannot open file\n");
         exit(EXIT_FAILURE);
     }
-    /* get file size */
+    // get file size
     size = get_file_size(code);
-    /* alloc the data and encrypted buffer */
-    data = (char *)calloc(1, (size + 16) * sizeof(char));
-    /* copy file contents to buffer */
+    // alloc the data and encrypted buffer
+    data = (char *)calloc(1, (size) * sizeof(char));
+    // copy file contents to buffer
     fread(data, sizeof(char), size, code);
     fclose(code);
+    // we don't have a key, send plaintext
     if (aes_key == NULL)
         send_data(sock, data, size);
     else
+        // send using the encryption key
         lsend_code_encrypted(sock, data, size, aes_key);
-}
-
-    void
-send_string(int sock, char *string)
-{
-#if defined(DEBUG)
-    printf("Opening %s\n", string);
-#endif
-    char buffer[2048];
-    memset(buffer, 0, 2048);
-    buffer[0] = '@';
-    memcpy(&buffer[1], string, strlen(string));
-    buffer[0 + strlen(string) + 1] = '@';
-    buffer[0 + strlen(string) + 1 + 1] = '\0';
-    write(sock, buffer, 2048);
-    //send_data(sock, string, strlen(string) + 1);
+    send_data(sock, fname, strlen(fname));
 }
 
     void
@@ -442,25 +424,19 @@ static int lua_send_module(lua_State* L)
     int argc = lua_gettop(L);
     int sock = luaL_checkinteger(L, 1);
     unsigned char *aes_key = NULL;
+    // we don't have any module to send
     if (argc == 1) {
         send_int(sock, 0);
         return 0;
     } else 
         send_int(sock, 1);
+    // fetch the encryption key;
     if (argc == 3)
         aes_key = luaL_checkstring(L, 3);
-
-
+    // fetch the filename 
     char *fname = luaL_checkstring(L, 2);
-    // if we have 3 args, we are using encryption, fetch the key
     lsend_file_code(sock, fname, aes_key);
-    send_string(sock, fname);
-
-
-//    // we are sending 1 module 
-//    send_int(sock, 1);
-//    lsend_file_code(sock, fname, aes_key);
-//    send_string(sock, basename(fname));
+    return 0;
 }
 
 static int lua_close_socket(lua_State* L)
