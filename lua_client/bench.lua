@@ -4,6 +4,9 @@ package.path = package.path .. ";../libs/heavy/?.lua"
 package.path = package.path .. ";../libs/medium/?.lua"
 package.path = package.path .. ";../libs/light/?.lua"
 package.path = package.path .. ";../libs/opti/?.lua"
+os.execute("rm -rf results; mkdir results");
+
+
 default_loops = 10
 local loops = default_loops
 -- the module name we are going to offload
@@ -136,27 +139,71 @@ function do_remote(func_ptr, lib_func, func_name, ...)
     --print('SGX_REMOTE_NW  ', sgx_rem.nw)
     --print('SGX_REMOTE_INIT', sgx_rem.init)
     --print('SGX_REMOTE_EXEC', sgx_rem.exec)
+    results = {}
+    results.func_name = func_name
+    results.lua_rem = lua_rem
+    results.sgx_rem = sgx_rem
+    results.sgx_local = sgx_local
+    return results
 end
 
 function do_heavy(arg)
-    do_remote(havlak.run_iter, 'havlak.run_iter', 'havlak', arg)
-    do_remote(nbody.run_iter, 'nbody.run_iter', 'nbody', arg)
-    do_remote(recursive_fib.run_iter, 'recursive_fib.run_iter', 'fib', arg)
-    do_remote(binarytrees.run_iter, 'binarytrees.run_iter', 'binarytrees', arg)
+    local r1 = do_remote(havlak.run_iter, 'havlak.run_iter', 'havlak', arg)
+    local r2 = do_remote(nbody.run_iter, 'nbody.run_iter', 'nbody', arg)
+    local r3 = do_remote(recursive_fib.run_iter, 'recursive_fib.run_iter', 'fib', arg)
+    local r4 = do_remote(binarytrees.run_iter, 'binarytrees.run_iter', 'binarytrees', arg)
+    local file = io.open ('results/heavy', 'w')
+    -- switch stdout to our file
+    io.output(file)
+    io.write('#Bench Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC\n')
+    print_all(r1)
+    print_all(r2)
+    print_all(r3)
+    print_all(r4)
+    io.close(file)
+    os.execute("cat results/heavy | column -t > a; mv a results/heavy;");
+
+end
+
+function print_all(r)
+    io.write(r.func_name,' ', r.lua_rem.exec,' ', r.sgx_local.e2e,' ', r.sgx_local.init, 
+    ' ', r.sgx_local.exec,' ', r.lua_rem.e2e, ' ', r.lua_rem.nw, ' ', r.lua_rem.init, 
+    ' ', r.lua_rem.exec, ' ', r.sgx_rem.e2e, ' ', r.sgx_rem.nw, ' ', r.sgx_rem.init, 
+    ' ', r.sgx_rem.exec,'\n')
 end
 
 function do_light(arg)
-    do_remote(deltablue.run_iter, 'deltablue.run_iter', 'deltablue', arg)
-    do_remote(life.run_iter, 'life.run_iter', 'life', arg)
-    do_remote(mandelbrot.run_iter, 'mandelbrot.run_iter', 'mandelbrot', arg)
-    do_remote(queens.run_iter, 'queens.run_iter', 'queens', arg)
+    local r1 = do_remote(deltablue.run_iter, 'deltablue.run_iter', 'deltablue', arg)
+    local r2 = do_remote(life.run_iter, 'life.run_iter', 'life     ', arg)
+    local r3 = do_remote(mandelbrot.run_iter, 'mandelbrot.run_iter', 'mandelbrot', arg)
+    local r4 = do_remote(queens.run_iter, 'queens.run_iter', 'queens    ', arg)
+    local file = io.open ('results/light', 'w')
+    -- switch stdout to our file
+    io.output(file)
+    io.write('#Bench Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC\n')
+    print_all(r1)
+    print_all(r2)
+    print_all(r3)
+    print_all(r4)
+    io.close(file)
+    os.execute("cat results/light | column -t > a; mv a results/light;");
 end
 
 function do_medium(arg)
-    do_remote(cd.run_iter, 'cd.run_iter', 'collisiondetection', arg)
-    do_remote(fasta.run_iter, 'fasta.run_iter', 'fasta', arg)
-    do_remote(ray.run_iter, 'ray.run_iter', 'ray', arg)
-    do_remote(richards.run_iter, 'richards.run_iter', 'richards', arg)
+    local r1 = do_remote(cd.run_iter, 'cd.run_iter', 'collisiondetection', arg)
+    local r2 = do_remote(fasta.run_iter, 'fasta.run_iter', 'fasta', arg)
+    local r3 = do_remote(ray.run_iter, 'ray.run_iter', 'ray', arg)
+    local r4 = do_remote(richards.run_iter, 'richards.run_iter', 'richards', arg)
+    local file = io.open ('results/medium', 'w')
+    -- switch stdout to our file
+    io.output(file)
+    io.write('#Bench Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC\n')
+    print_all(r1)
+    print_all(r2)
+    print_all(r3)
+    print_all(r4)
+    io.close(file)
+    os.execute("cat results/medium | column -t > a; mv a results/medium;");
 end
 
 
@@ -226,7 +273,7 @@ end
 local data = string.rep('x', 1000000)
 -- completed
 do_algo()
-do_crypto(data)
-do_touches()
-do_prints()
-do_freads()
+--do_crypto(data)
+--do_touches()
+--do_prints()
+--do_freads()

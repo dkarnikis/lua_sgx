@@ -44,7 +44,7 @@ SGX_COMMON_FLAGS += -Wall -Wextra -Winit-self -Wpointer-arith -Wreturn-type \
 SGX_COMMON_CFLAGS := $(SGX_COMMON_FLAGS)  $(LUA_FLAGS)
 SGX_COMMON_CXXFLAGS := $(SGX_COMMON_FLAGS) -Wnon-virtual-dtor -std=c++11 $(LUA_FLAGS)
 
-APP_C_Flags +=  -fpermissive  $(LUA_FLAGS)
+APP_C_Flags += $(LUA_FLAGS)
 SGX_COMMON_CFLAGS +=  $(LUA_FLAGS)
 ######## App Settings ########
 
@@ -94,7 +94,7 @@ Enclave_Cpp_Files := $(wildcard Enclave/*.cpp)  $(wildcard Enclave/dh/*.cpp)
 
 Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/libcxx
 
-Enclave_C_Flags := $(Enclave_Include_Paths) -nostdinc -fvisibility=hidden -fpie -ffunction-sections -fdata-sections   -fpermissive $(LUA_FLAGS)
+Enclave_C_Flags := $(Enclave_Include_Paths) -nostdinc -fvisibility=hidden -fpie -ffunction-sections -fdata-sections $(LUA_FLAGS)
 
 
 Enclave_Cpp_Flags := $(Enclave_C_Flags) -nostdinc++ -fpermissive -std=gnu++11 $(LUA_FLAGS)# -g -DDEBUG -std=c++11 
