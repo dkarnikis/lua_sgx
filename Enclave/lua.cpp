@@ -578,5 +578,8 @@ main (int argc, char **argv)
         fflush(stdout);
         abort();
     }
+    // we are on local execution, close the lua state
+    if (enclave_bootstrap == 1)
+        lua_close(L);
 
 }
