@@ -162,7 +162,6 @@ function do_heavy(arg)
     print_all(r4)
     io.close(file)
     os.execute("cat results/heavy | column -t > a; mv a results/heavy;");
-
 end
 
 function print_all(r)
@@ -216,64 +215,124 @@ function do_algo()
 end
 
 function do_crypto(data)
-    do_remote(blake2b.hash, 'blake2b.hash', 'blake2b', data)
-    do_remote(chacha20.run, 'chacha20.run', 'chacha20', data)
-    do_remote(checksum.crc32, 'checksum.crc32', 'checksum', data)
-    do_remote(md5.hash, 'md5.hash', 'md5', data)
-    do_remote(norx.run, 'norx.run', 'norx', data)
-    do_remote(norx32.run, 'norx32.run', 'norx32', data)
-    do_remote(rabbit.run, 'rabbit.run', 'rabbit', data)
-    do_remote(rc4.run, 'rc4.run', 'rc4', data)
-    do_remote(salsa20.run, 'salsa20.run', 'salsa20', data)
-    do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
-    do_remote(sha2.sha512, 'sha2.sha512', 'sha512', data)
-    do_remote(xtea.run, 'xtea.run', 'xtea', data)
+    local r1 = do_remote(blake2b.hash, 'blake2b.hash', 'blake2b', data)
+    local r2 = do_remote(chacha20.run, 'chacha20.run', 'chacha20', data)
+    local r3 = do_remote(checksum.crc32, 'checksum.crc32', 'checksum', data)
+    local r4 = do_remote(md5.hash, 'md5.hash', 'md5', data)
+    local r5 = do_remote(norx.run, 'norx.run', 'norx', data)
+    local r6 = do_remote(norx32.run, 'norx32.run', 'norx32', data)
+    local r7 = do_remote(rabbit.run, 'rabbit.run', 'rabbit', data)
+    local r8 = do_remote(rc4.run, 'rc4.run', 'rc4', data)
+    local r9 = do_remote(salsa20.run, 'salsa20.run', 'salsa20', data)
+    local r10 = do_remote(sha2.sha256, 'sha2.sha256', 'sha256', data)
+    local r11 = do_remote(sha2.sha512, 'sha2.sha512', 'sha512', data)
+    local r12 = do_remote(xtea.run, 'xtea.run', 'xtea', data)
+    local file = io.open ('results/crypto', 'w')
+    -- switch stdout to our file
+    io.output(file)
+    io.write('#Bench Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC\n')
+    print_all(r1)
+    print_all(r2)
+    print_all(r3)
+    print_all(r4)
+    print_all(r5)
+    print_all(r6)
+    print_all(r7)
+    print_all(r8)
+    print_all(r9)
+    print_all(r10)
+    print_all(r11)
+    print_all(r12)
+    io.close(file)
+    os.execute("cat results/crypto | column -t > a; mv a results/crypto;");
+
 end
 
 function do_touches()
+    do_reads()
+    do_writes()
+end
+
+function do_reads()
     local lim = 1024 * 1024 * 4
-    local i = 32
+    local i = 1024
+    file = io.open("results/reads", "w")
+    io.output(file)
+    io.write('#Array_Size Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC\n')
     while i <= lim do
-        do_remote(opt.reads, 'opt.reads', 'reads', i)
-        do_remote(opt.writes, 'opt.writes', 'writes', i)
+        local r = do_remote(opt.reads, 'opt.reads', 'reads', i)
+        r.func_name = i
+        print_all(r)
         i = i * 2
     end
+    io.close(file)
+    os.execute("cat results/reads | column -t > a; mv a results/reads;");
+end
+
+function do_writes()
+    local lim = 1024 * 1024 * 4
+    local i = 1024
+    file = io.open("results/writes", "w")
+    io.output(file)
+    io.write('#Array_Size Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC\n')
+    while i <= lim do
+        local r = do_remote(opt.writes, 'opt.writes', 'writes', i)
+        r.func_name = i
+        print_all(r)
+        i = i * 2
+    end
+    io.close(file)
+    os.execute("cat results/writes | column -t > a; mv a results/writes;");
 end
 
 -- start printing from 10K to 1M
 function do_prints()
     local lim = 1000000
     local i = 10000
+    file = io.open("results/prints", "w")
+    io.output(file)
+    io.write('#Print_NUM Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC\n')
     while i <= lim do
-        do_remote(opt.t_print, 'opt.t_print', 'print', i)
+        local r = do_remote(opt.t_print, 'opt.t_print', 'print', i)
+        r.func_name = i
+        print_all(r)
         if i == 10000 then
             i = i * 10
         else
             i = i + 100000
         end
     end
+    io.close(file)
+    os.execute("cat results/prints | column -t > a; mv a results/prints;");
 end
 
 -- start printing from 10K to 1M
 function do_freads()
     local lim = 4 * 1024 * 1024
-    local i = 1024
+    local i = 64
     module_file_name = 'out'
     local file = io.open ('out', 'w')
     local data = string.rep('x', 32 * 1024 * 1024) .. 'a' -- * 1024 * 1024)..'a'
     file:write(data)
     io.close(file)
+    file = io.open("results/fread", "w")
+    io.output(file)
+    io.write('#Print_NUM Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC\n')
     while i <= lim do
-        do_remote(opt.fread, 'opt.fread', 'fread', i)
+        local r = do_remote(opt.fread, 'opt.fread', 'fread', i)
+        r.func_name = i
+        print_all(r)
         i = i * 2
     end
     module_file_name = nil
+    io.close(file)
+    os.execute("cat results/fread | column -t > a; mv a results/fread;");
 end
 
 local data = string.rep('x', 1000000)
 -- completed
 do_algo()
---do_crypto(data)
---do_touches()
---do_prints()
---do_freads()
+do_crypto(data)
+do_touches()
+do_prints()
+do_freads()
