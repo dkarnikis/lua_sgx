@@ -28,3 +28,6 @@ xtea:crypto/xtea
 salsa20:crypto/salsa20
 rabbit:crypto/rabbit
 opt:opti/opt
+test_print:test_print
+wrk:macro/wrk/wrk
+counter:macro/wrk/counter

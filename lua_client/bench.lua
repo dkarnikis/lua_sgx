@@ -71,7 +71,9 @@ function load_libs()
     xtea            = wrapper(xtea)
     -- opts
     opt             = wrapper(opt)
-    
+    -- my custom lib
+    test_print          = require("test_print")
+    test_print          = wrapper(test_print)
 end
 
 function send_modules(wrk)
@@ -329,10 +331,14 @@ function do_freads()
     os.execute("cat results/fread | column -t > a; mv a results/fread;");
 end
 
-local data = string.rep('x', 1000000)
+local data = string.rep('x', 1000)
 -- completed
-do_algo()
-do_crypto(data)
-do_touches()
-do_prints()
-do_freads()
+--do_algo()
+--do_crypto(data)
+--do_touches()
+--do_prints()
+--do_freads()
+connect_to_worker(mode)
+local wrk = config[1]
+send_modules(wrk)
+print(test_print.my_print("lala"))

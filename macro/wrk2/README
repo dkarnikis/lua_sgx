@@ -1,0 +1,9 @@
+auth.lua
+counter.lua
+report.lua
+
+run ./run.sh and open a server to an other computer, be sure to alter the ips on the
+respective files of *_scripts/ in scripts folder
+
+measurements are stored in results/
+

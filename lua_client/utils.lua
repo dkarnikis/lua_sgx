@@ -1,7 +1,7 @@
 local utils = {}
 client = require('foo')
 -- see if the file exists
-function file_exists(file)
+function utils.file_exists(file)
     local f = io.open(file, "rb")
     if f then f:close() end
     return f ~= nil
@@ -10,7 +10,7 @@ end
 -- get all lines from a file, returns an empty 
 -- list/table if the file does not exist
 function utils.lines_from(file, mode)
-    if not file_exists(file) then return {} end
+    if not utils.file_exists(file) then return {} end
     lines = {}
     for line in io.lines(file) do 
         local func = string.gmatch(line, '([^,]+)')
@@ -38,4 +38,16 @@ function utils.lines_from(file, mode)
     end
     return lines
 end
+
+-- get all lines from a file, returns an empty 
+-- list/table if the file does not exist
+function utils.read_file(file)
+  if not utils.file_exists(file) then return {} end
+  lines = {}
+  for line in io.lines(file) do 
+    lines[#lines + 1] = line
+  end
+  return lines
+end
+
 return utils

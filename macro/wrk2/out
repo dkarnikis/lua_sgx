@@ -1,0 +1,14 @@
+{
+  "c":1,
+  "w":[{
+      "host":"0.0.0.0",
+      "method":"GET",
+      "scheme":"http",
+      "port":"8000",
+      "path":"/",
+      "headers":{
+        "Host":"0.0.0.0:8000",
+        "X-Counter":0
+      }
+    }]
+}

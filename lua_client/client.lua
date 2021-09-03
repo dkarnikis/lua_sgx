@@ -1,10 +1,13 @@
-#! /usr/bin/lua
 local client = require('foo')
 utils = require("utils")
 package.path = package.path .. ";../libs/?.lua"
 dkjson = require("dkjson")
--- load  the libraries
-lua_code = arg[1]
+if arg == nil then
+    lua_code = utils.read_file('sconfig')[1]
+else
+    -- load  the libraries
+    lua_code = arg[1]
+end
 mode = 1 --tonumber(arg[2])
 functions = {}
 results = {}
@@ -22,6 +25,22 @@ if lua_code == nil then
     os.exit(1)
 end
 
+
+
+function send_modules(worker)
+    -- if we did not supply an input, don't send anything
+    if module_file_name == nil then
+        client.lsend_module(worker.socket);
+    elseif worker.aes_key == nil then
+    -- we have an input, but we are not using encryption
+        client.lsend_module(worker.socket, module_file_name); 
+    else
+    -- we have input and we use encryption
+        client.lsend_module(worker.socket, module_file_name, worker.aes_key); 
+    end
+end
+
+
 function connect_to_worker(m)
     mode = m
     config = utils.lines_from("config", mode)
@@ -37,12 +56,20 @@ local function pick_worker()
     return (task_counter % remote_servers) + 1
 end
 
+
+function pack(...)
+    -- Returns a new table with parameters stored into an array, with field "n" being the total number of parameters
+    local t = {...}
+    t.n = #t
+    return t
+end
+
 local function offload (...)
-    local args = table.pack(...)
+    local args = pack(...)
     local json = dkjson.encode(args, { indent = true})
     json = 'json = \'' .. json .. '\''
-    --local wrk = pick_worker()
-    --local spawn_wrk = remote_worker()
+    --local worker = pick_worker()
+    --local spawn_worker = remote_worker()
     local item = config[1]
     -- remote 'local lua'
     if mode == 0 then
@@ -97,6 +124,4 @@ function wrapper (obj, lib_name)
     end
     return obj
 end
-
-res = loadfile(lua_code)()
-
+local res = loadfile(lua_code)()
