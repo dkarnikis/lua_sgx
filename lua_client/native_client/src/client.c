@@ -359,17 +359,6 @@ __print_key(char *str, uint8_t *key, int size)
     printf("\n");
 }
 
-    int 
-RNG(uint8_t *dest, unsigned size) 
-{
-    unsigned i;
-    for (i = 0; i < size; i++) {
-        dest[i] = rand();
-    }
-    return 1;
-}
-
-
 static int lua_connect(lua_State* L)
 {
     char *a = luaL_checkstring(L, 1);
@@ -436,6 +425,7 @@ static int lua_close_socket(lua_State* L)
     int sock = luaL_checkinteger(L, 1);
     shutdown(sock, 2);
     close (sock);
+    return 0;
 }
 
 static int lua_send_code(lua_State* L)
@@ -451,11 +441,10 @@ static int lua_send_code(lua_State* L)
         aes_key = luaL_checkstring(L, 3);
         lsend_code_encrypted(sock, data, strlen(data), aes_key);
     }
-    //send_int(sock, 0);
+    return 0;
 }
 
-
-static luaL_Reg const foolib[] = {
+static luaL_Reg const liblclientlib[] = {
     { "lconnect", lua_connect},
     { "lhandshake", lua_handshake},
     { "lsend_module", lua_send_module},
@@ -465,8 +454,18 @@ static luaL_Reg const foolib[] = {
     { 0, 0 }
 };
 
-int luaopen_foo(lua_State* L)
-{
-    luaL_newlib(L, foolib);
-    return 1;
-}
+#ifdef __LUA_JIT__
+    int 
+    luaopen_liblclient(lua_State* L)
+    {
+        luaL_register(L, "foo", liblclientlib);
+        return 1;
+    }
+#else
+    int 
+    luaopen_liblclient(lua_State* L)
+    {
+        luaL_newlib(L, liblclientlib);
+        return 1;
+    }
+#endif

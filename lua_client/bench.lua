@@ -7,7 +7,7 @@ package.path = package.path .. ";../libs/opti/?.lua"
 os.execute("rm -rf results; mkdir results");
 
 
-default_loops = 10
+default_loops = 1
 local loops = default_loops
 -- the module name we are going to offload
 local module_file_name = nil
@@ -98,6 +98,7 @@ function do_bench(func, lib_func, func_name, m, data)
     for i = 1,loops, 1 do
         func(data)
     end
+    print("Done")
     close_worker(config[1].socket)
     return get_avg_time(lib_func)
 end
@@ -124,23 +125,6 @@ function do_remote(func_ptr, lib_func, func_name, ...)
     local lua_rem = do_bench(func_ptr, lib_func, func_name, 0, ...)
     local sgx_rem = do_bench(func_ptr, lib_func, func_name, 1, ...)
     local sgx_local = do_bench(func_ptr, lib_func, func_name, 2, ...)
-    --print('Bench Lua_Local SGX_Local_E2E SGX_Local_INIT SGX_LOCAL_EXEC LUA_R_E2E LUA_R_NW LUA_R_INIT LUA_R_EXEC SGX_R_E2E SGX_R_NW SGX_R_INIT SGX_R_EXEC')
-    --print(func_name, lua_rem.exec, sgx_local.e2e, sgx_local.init, sgx_local.exec, lua_rem.e2e, lua_rem.nw, lua_rem.init, lua_rem.exec,
-    --    sgx_rem.e2e, sgx_rem.nw, sgx_rem.init, sgx_rem.exec)
-   -- 
-    --print('Bench          ', func_name)
-    --print('Lua_Local      ', lua_rem.exec)
-    --print('SGX_Local_E2E  ', sgx_local.e2e)
-    --print('SGX_Local_INIT ', sgx_local.init)
-    --print('SGX_Local_EXEC ', sgx_local.exec)
-    --print('LUA_REMOTE_E2E ', lua_rem.e2e)
-    --print('LUA_REMOTE_NW  ', lua_rem.nw)
-    --print('LUA_REMOTE_INIT', lua_rem.init)
-    --print('LUA_REMOTE_EXEC', lua_rem.exec)
-    --print('SGX_REMOTE_E2E ', sgx_rem.e2e)
-    --print('SGX_REMOTE_NW  ', sgx_rem.nw)
-    --print('SGX_REMOTE_INIT', sgx_rem.init)
-    --print('SGX_REMOTE_EXEC', sgx_rem.exec)
     results = {}
     results.func_name = func_name
     results.lua_rem = lua_rem
@@ -211,9 +195,9 @@ end
 
 load_libs()
 function do_algo()
-    do_light(100)
-    do_medium(100)
-    do_heavy(40)
+    do_light(2)
+    do_medium(2)
+    do_heavy(2)
 end
 
 function do_crypto(data)
@@ -331,14 +315,14 @@ function do_freads()
     os.execute("cat results/fread | column -t > a; mv a results/fread;");
 end
 
-local data = string.rep('x', 1000)
+local data = string.rep('x', 1)
 -- completed
---do_algo()
---do_crypto(data)
---do_touches()
---do_prints()
---do_freads()
-connect_to_worker(mode)
-local wrk = config[1]
-send_modules(wrk)
-print(test_print.my_print("lala"))
+do_algo()
+do_crypto(data)
+do_touches()
+do_prints()
+do_freads()
+--connect_to_worker(mode)
+--local wrk = config[1]
+--send_modules(wrk)
+--print(test_print.my_print("lala"))

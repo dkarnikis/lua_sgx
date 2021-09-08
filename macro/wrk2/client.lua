@@ -1,1 +1,1 @@
-/home/dkarnikis/work/sgxworks/lua_sgx/lua_client/client.lua
+../../lua_client/client.lua

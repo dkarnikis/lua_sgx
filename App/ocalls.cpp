@@ -14,7 +14,7 @@
 int
 ocall_get_file_size(FILE *file)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     int size;
@@ -27,7 +27,7 @@ ocall_get_file_size(FILE *file)
 char *
 ocall_setlocale(int category, const char *locale)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     return setlocale(category, locale);
@@ -36,7 +36,7 @@ ocall_setlocale(int category, const char *locale)
 void
 ocall_exit(int status)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     exit(status);
@@ -45,7 +45,7 @@ ocall_exit(int status)
 long int
 ocall_clock()
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     return clock();
@@ -54,7 +54,7 @@ ocall_clock()
 long int
 ocall_time(long int *src)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     return time(src);
@@ -63,7 +63,7 @@ ocall_time(long int *src)
 char *
 ocall_getenv(const char *name)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     return getenv(name);
@@ -72,7 +72,7 @@ ocall_getenv(const char *name)
 int
 ocall_write(int file, const void *buf, unsigned int size)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
    	return (int)write(file, buf, size);
@@ -81,7 +81,7 @@ ocall_write(int file, const void *buf, unsigned int size)
 int
 ocall_fputs(const char *str, FILE *fd)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     return fputs(str, fd);
@@ -90,7 +90,7 @@ ocall_fputs(const char *str, FILE *fd)
 size_t
 ocall_fwrite(const void *buffer, size_t size, size_t count, FILE *fd)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     return fwrite(buffer, size, count, fd);
@@ -100,7 +100,7 @@ ocall_fwrite(const void *buffer, size_t size, size_t count, FILE *fd)
 char *
 ocall_fgets(char *str, int n, FILE *fd)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     char *f;
@@ -111,7 +111,7 @@ ocall_fgets(char *str, int n, FILE *fd)
 int
 ocall_fflush(FILE *ptr)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
 	printf("%s\n", __FUNCTION__);
 #endif
     return fflush(ptr);
@@ -120,7 +120,7 @@ ocall_fflush(FILE *ptr)
 struct lconv *
 ocall_localeconv()
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return localeconv();
@@ -129,7 +129,7 @@ ocall_localeconv()
 FILE *
 ocall_fopen(const char *filename, const char *mode)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     FILE *fp;
@@ -140,7 +140,7 @@ ocall_fopen(const char *filename, const char *mode)
 int
 ocall_system(const char *str)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return system(str);
@@ -149,7 +149,7 @@ ocall_system(const char *str)
 long int
 ocall_mktime(struct tm *timeptr)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return (long int)mktime((struct tm *)timeptr);
@@ -158,7 +158,7 @@ ocall_mktime(struct tm *timeptr)
 int
 ocall_remove(const char *filename)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return remove(filename);
@@ -180,7 +180,7 @@ ocall_gmtime(const long int *timer)
 int
 ocall_rename(const char *old_filename, const char *new_filename)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return rename(old_filename, new_filename);
@@ -189,7 +189,7 @@ ocall_rename(const char *old_filename, const char *new_filename)
 char *
 ocall_tmpnam(char *str)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return tmpnam(str);
@@ -206,7 +206,7 @@ ocall_fclose(FILE *ptr)
 int
 ocall_setvbuf(FILE *stream, char *buffer, int mode, size_t size)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return setvbuf(stream, buffer, mode, size);
@@ -215,7 +215,7 @@ ocall_setvbuf(FILE *stream, char *buffer, int mode, size_t size)
 long int
 ocall_ftell(FILE *stream)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return ftell(stream);
@@ -224,7 +224,7 @@ ocall_ftell(FILE *stream)
 int
 ocall_fseek(FILE *stream, long int offset, int whence)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return fseek(stream, offset, whence);
@@ -233,7 +233,7 @@ ocall_fseek(FILE *stream, long int offset, int whence)
 FILE *
 ocall_tmpfile()
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return tmpfile();
@@ -242,7 +242,7 @@ ocall_tmpfile()
 void
 ocall_clearerr(FILE *stream)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     clearerr(stream);
@@ -251,7 +251,7 @@ ocall_clearerr(FILE *stream)
 char *
 recover_filename(FILE *f)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     int fd;
@@ -271,7 +271,7 @@ recover_filename(FILE *f)
 size_t
 ocall_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return fread(ptr, size, nmemb, stream);
@@ -280,7 +280,7 @@ ocall_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 int
 ocall_ferror(FILE *stream)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return ferror(stream);
@@ -289,7 +289,7 @@ ocall_ferror(FILE *stream)
 int
 ocall_getc(FILE *stream)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return getc(stream);
@@ -298,7 +298,7 @@ ocall_getc(FILE *stream)
 int
 ocall_ungetc(int ch, FILE *stream)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return ungetc(ch, stream);
@@ -307,7 +307,7 @@ ocall_ungetc(int ch, FILE *stream)
 FILE *
 ocall_freopen(const char *filename, const char *mode, FILE *stream)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return freopen(filename, mode, stream);
@@ -316,7 +316,7 @@ ocall_freopen(const char *filename, const char *mode, FILE *stream)
 int
 ocall_feof(FILE *stream)
 {
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return feof(stream);
@@ -325,7 +325,7 @@ ocall_feof(FILE *stream)
 int
 ocall_rand()
 {   
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     return rand();
@@ -338,7 +338,7 @@ void
 ocall_srand(unsigned int seed)
 {
 
-#ifdef DEBUG1
+#ifdef DEBUG_1
     printf("%s\n", __FUNCTION__);
 #endif
     srand(seed);

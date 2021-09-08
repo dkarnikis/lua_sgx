@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include "../Enclave/dh/tools.h"
 #include "../Enclave/dh/tweetnacl.h"
-
+#include <fcntl.h>
 
 #define LOCATION __LINE__,__FILE__,__func__
 
@@ -116,12 +116,13 @@ l_setup_enclave()
     int updated;
     (void)ret;
     clock_gettime(CLOCK_REALTIME, &tsgx_start);
-    /* spawn the new hardware enclave */
+    // spawn the new hardware enclave
     ret = sgx_create_enclave(enclave_path, SGX_DEBUG_FLAG, &token,
             &updated, &unique_eid, NULL);
 #ifdef DEBUG
-    if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to create enclave", 1))
+    if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to create enclave", 1)) {
         abort();
+    }
 #endif
     /* initialize lua VM arguments and stdio */
     ret = ecall_init(unique_eid, disable_execution_output, stdin, stdout, stdout);
@@ -233,11 +234,14 @@ l_setup_client_handshake(sgx_enclave_id_t eid, int n_socket)
     print_key("Client public Key: ", client_public_key, crypto_box_PUBLICKEYBYTES);
     print_key("Server public Key: ", server_public_key, crypto_box_PUBLICKEYBYTES);
 #endif
+    goto end;
 #ifdef DEBUG
 cleanup:
 	printf("Failed\n");
 	abort();
 #endif
+end:
+    return ;
 }
 
 /*
@@ -281,6 +285,24 @@ int count_open_fds(void) {
     return count;
 }
 
+char *
+get_fd_name(int fno)
+{
+    int MAXSIZE = 0xFFF;
+    char proclnk[0xFFF];
+    ssize_t r;
+    char *filename;
+    filename = (char *) malloc(0xFFF + 1);
+    sprintf(proclnk, "/proc/self/fd/%d", fno);
+    r = readlink(proclnk, filename, MAXSIZE);
+    if (r < 0)
+    {
+        return NULL;
+    }
+    filename[r] = '\0';
+    return filename;
+}
+
 /*
  * Close all the open file descriptors from the next from s
  */ 
@@ -288,10 +310,13 @@ void
 close_open_fds(int s)
 {
     int count;
-    int i;
+    int fd;
     count = count_open_fds();
-    for (i = s + 1; i < count; i++) {
-        close(i);
+    for (fd = s + 1; fd < count; fd++) {
+        char *f = get_fd_name(fd);
+        if (!f) continue;
+        if (strstr(f, "isgx") == NULL && strstr(f, "socket") == NULL)
+            close(fd);
+        free(f);
     }
-
 }

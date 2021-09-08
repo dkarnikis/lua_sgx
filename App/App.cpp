@@ -36,11 +36,6 @@ char *enclave_path = NULL;
   * Don't print on screen the lua results
   */
 int disable_execution_output;
-/* 
- * flag for fast enclave mode
- */
-short enclave_instatiated;	
-pthread_mutex_t clients_lock;
 /*
  * The enclave id
  */
@@ -60,12 +55,6 @@ struct timespec te2e_start = {0, 0}, te2e_stop = {0, 0}, tsgx_start{0, 0}, tsgx_
  * Don't print the execution statistics eg timers
  */
 int disable_timer_print = 0;
-/* 
-* skip the first results in single enclave
-* instance, we skip the sgx init results
-* and keep only the optimizations
-*/
-int which_run_am_i;
 /*
  * Optimized mode for lua. Uses the same enclave for all executions
  */
@@ -154,7 +143,7 @@ start:
     recv_num(new_socket, &encryption_mode);
     // execute on the SGX vm
     if (encryption_mode == 0) {
-        // execute on the lua vm
+        // execute on the lua vm without SGX enclave
         spawn_lua_og(new_socket);
         close_open_fds(welcome_socket);
         goto start;
@@ -232,7 +221,7 @@ spawn_lua_enclave(int n_socket, int local_mode)
     buf = NULL;
     encrypted_file = NULL;
 #ifdef DEBUG
-    fprintf(stdout, "-> Client connected, waiting for code!\n");
+    fprintf(stdout, "\t-> Client connected, waiting for code!\n");
 #endif
     /*
 	 * Setup up public and private keys with the client.
@@ -249,6 +238,7 @@ spawn_lua_enclave(int n_socket, int local_mode)
             break;
         if (local_mode == 1) {
             clock_gettime(CLOCK_REALTIME, &tsgx_start);
+            close_open_fds(welcome_socket);
             unique_eid = l_setup_enclave();
             clock_gettime(CLOCK_REALTIME, &tsgx_stop);
             sgx_time = get_time_diff(tsgx_stop, tsgx_start) / ns;
@@ -281,10 +271,6 @@ spawn_lua_enclave(int n_socket, int local_mode)
         }
         send_timers(timer_data, n_socket);
     }
-#ifdef DEBUG
-    /* cleanup the connection info */
-cleanup:
-#endif
     close(new_socket);
     return NULL;
 }
@@ -364,9 +350,12 @@ spawn_lua_og(int n_socket)
         }
         send_timers(timer_data, n_socket);
     }
+    goto end;
 #ifdef DEBUG
 cleanup:
+    check_error(NULL, __LINE__, __FILE__, __FUNCTION__, "error occured\n");
 #endif
+end:
     close(n_socket);
     return NULL;
 }

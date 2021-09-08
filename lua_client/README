@@ -1,2 +1,1 @@
-lua client automatically sends with each request the out file as input
-it can be empty or filled with data
+Lua that needs to be installed: 5.3.5

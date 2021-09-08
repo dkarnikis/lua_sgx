@@ -1,4 +1,4 @@
-local client = require('foo')
+local client = require('liblclient')
 utils = require("utils")
 package.path = package.path .. ";../libs/?.lua"
 dkjson = require("dkjson")
@@ -8,6 +8,7 @@ else
     -- load  the libraries
     lua_code = arg[1]
 end
+config = nil
 mode = 1 --tonumber(arg[2])
 functions = {}
 results = {}
@@ -24,8 +25,6 @@ if lua_code == nil then
     print("Give a lua code")
     os.exit(1)
 end
-
-
 
 function send_modules(worker)
     -- if we did not supply an input, don't send anything
@@ -67,7 +66,7 @@ end
 local function offload (...)
     local args = pack(...)
     local json = dkjson.encode(args, { indent = true})
-    json = 'json = \'' .. json .. '\''
+    json = 'json = [[\n' .. json .. '\n]]'
     --local worker = pick_worker()
     --local spawn_worker = remote_worker()
     local item = config[1]

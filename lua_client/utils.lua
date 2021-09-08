@@ -1,5 +1,5 @@
 local utils = {}
-client = require('foo')
+client = require('liblclient')
 -- see if the file exists
 function utils.file_exists(file)
     local f = io.open(file, "rb")
