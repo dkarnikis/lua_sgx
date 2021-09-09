@@ -62,7 +62,6 @@ request = function()
 --    if config[1] == nil then
 --        print("")
 --    else
---        close_worker(config[1].socket)
 --    end
     counter_val = res.c
     local xx = json.decode(res.wr)
@@ -76,4 +75,20 @@ request = function()
     wrk = xx[1]
     -- close the file
     return result
+end
+
+function round(number)
+    precision = 2
+    local fmtStr = string.format('%%0.%sf',precision)
+    number = string.format(fmtStr,number)
+    return number
+end
+
+
+done = function(summary, latency, requests)
+    reqs_s  = string.sub(tostring(summary.requests/summary.duration), 1, 4)
+    trans_s = string.sub(tostring(summary.bytes/summary.duration/1024), 1, 4)
+
+    print("Requests/sec", reqs_s)
+    print("Transfer/sec", trans_s .. 'KB')
 end
