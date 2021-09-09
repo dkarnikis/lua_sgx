@@ -191,13 +191,11 @@ function do_medium(arg)
     os.execute("cat results/medium | column -t > a; mv a results/medium;");
 end
 
-
-
 load_libs()
 function do_algo()
-    do_light(2)
-    do_medium(2)
-    do_heavy(2)
+    do_light(100)
+    do_medium(100)
+    do_heavy(40)
 end
 
 function do_crypto(data)
@@ -317,11 +315,11 @@ end
 
 local data = string.rep('x', 1)
 -- completed
-do_algo()
-do_crypto(data)
-do_touches()
-do_prints()
-do_freads()
+--do_algo()
+--do_crypto(data)
+--do_touches()
+--do_prints()
+--do_freads()
 --connect_to_worker(mode)
 --local wrk = config[1]
 --send_modules(wrk)

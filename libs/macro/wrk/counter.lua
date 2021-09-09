@@ -1,7 +1,7 @@
 local counter = {} 
 
 counter.exec = function(dat)
-    obj = dkjson.decode(dat)
+    local obj = dkjson.decode(dat)
     -- get the values 
     local counter_val = obj.c
     local path = "/" .. counter_val
@@ -15,7 +15,7 @@ counter.exec = function(dat)
     local result = {r = res, wr = obj.w, c = counter_val}
     local res = dkjson.encode(result)
     -- print to stdout so the client can parse them
-    print(res)
+    return res
 end
 
 return counter

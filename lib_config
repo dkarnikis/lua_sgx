@@ -31,3 +31,5 @@ opt:opti/opt
 test_print:test_print
 wrk:macro/wrk/wrk
 counter:macro/wrk/counter
+report:macro/wrk/report
+auth:macro/wrk/auth

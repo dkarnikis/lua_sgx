@@ -2,14 +2,17 @@ local client = require('liblclient')
 utils = require("utils")
 package.path = package.path .. ";../libs/?.lua"
 dkjson = require("dkjson")
+mode = 1
 if arg == nil then
-    lua_code = utils.read_file('sconfig')[1]
+    local f_config = utils.read_file('sconfig')[1]
+    local func = string.gmatch(f_config, '([^,]+)')
+    lua_code = func()
+    mode = tonumber(func())
 else
     -- load  the libraries
     lua_code = arg[1]
 end
 config = nil
-mode = 1 --tonumber(arg[2])
 functions = {}
 results = {}
 tags = {}

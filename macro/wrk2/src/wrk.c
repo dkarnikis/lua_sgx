@@ -9,6 +9,7 @@
 // Max recordable latency of 1 day
 #define MAX_LATENCY 24L * 60 * 60 * 1000000
 
+#define printf(...) ;
 static struct config {
     uint64_t threads;
     uint64_t connections;

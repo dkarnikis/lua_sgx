@@ -4,19 +4,6 @@
 -- NOTE: each wrk thread has an independent Lua scripting
 -- context and thus there will be one counter per thread
 
-function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
-end
-
 package.path = package.path .. ";../../libs/macro/wrk/?.lua"
 package.path = package.path .. ";../libs/?.lua"
 counter_val = 0
@@ -44,7 +31,7 @@ request = function()
         end
     end
     local a = {c = counter_val, w = {tmp}}
-    local dat = dkjson.encode(a, {indent = false})
+    local dat = dkjson.encode(a)
     local res = counter.exec(dat) --counter_val, tmp)
     res = dkjson.decode(res)
     res.wr = dkjson.encode(res.wr)
@@ -63,8 +50,9 @@ request = function()
 end
 
 done = function(summary, latency, requests)
-    reqs_s  = string.sub(tostring(summary.requests/summary.duration), 1, 5)
-    trans_s = string.sub(tostring(summary.bytes/summary.duration / 1024 / 1000000), 1, 5)
-    print("Requests/sec", reqs_s)
-    print("Transfer/sec", trans_s .. 'KB')
+    io.write(string.format("requests: %d,\n", summary.requests))
+    io.write(string.format("duration_in_microseconds: %0.2f,\n", summary.duration))
+    io.write(string.format("bytes: %d\n", summary.bytes))
+    io.write(string.format("requests_per_sec: %0.2f\n", (summary.requests/summary.duration)*1e6))
+    io.write(string.format("bytes_transfer_per_sec: %0.2f\n", (summary.bytes/summary.duration)*1e6))
 end
