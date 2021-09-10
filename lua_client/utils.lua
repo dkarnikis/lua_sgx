@@ -11,7 +11,7 @@ end
 -- list/table if the file does not exist
 function utils.lines_from(file, mode)
     if not utils.file_exists(file) then return {} end
-    lines = {}
+    local lines = {}
     for line in io.lines(file) do 
         local func = string.gmatch(line, '([^,]+)')
         local server = func()
@@ -42,12 +42,12 @@ end
 -- get all lines from a file, returns an empty 
 -- list/table if the file does not exist
 function utils.read_file(file)
-  if not utils.file_exists(file) then return {} end
-  lines = {}
-  for line in io.lines(file) do 
-    lines[#lines + 1] = line
-  end
-  return lines
+    if not utils.file_exists(file) then return {} end
+    local lines = {}
+    for line in io.lines(file) do 
+        lines[#lines + 1] = line
+    end
+    return lines
 end
 
 return utils

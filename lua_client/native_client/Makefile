@@ -8,8 +8,10 @@ OBJ_DIR=obj
 
 ifeq ($(wrk), 1)
 		# path to WRKJIT
-        LIBS += -L/home/dkarnikis/work/lua_sgx/macro/wrk2/deps/luajit/src -lluajit  -D__LUA_JIT__
-		INCLUDES += -I/home/dkarnikis/work/lua_sgx/macro/wrk2/deps/luajit/src
+        LIBS += -L ../../macro/wrk2/deps/luajit/src -lluajit  -D__LUA_JIT__
+else ifeq ($(snabb), 1)
+		LIBS += -L ../../macro/snabb-2019.11/lib/luajit/src -lraptorjit -D__RAPTOR__JIT__
+		INCLUDES += -I ../../macro/snabb-2019.11/lib/luajit/src
 else
 		LIBS += -llua
 endif

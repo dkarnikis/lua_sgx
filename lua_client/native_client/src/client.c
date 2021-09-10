@@ -454,7 +454,16 @@ static luaL_Reg const liblclientlib[] = {
     { 0, 0 }
 };
 
-#ifdef __LUA_JIT__
+#ifdef __RAPTOR_JIT__
+    int 
+    luaopen_liblclient(lua_State* L)
+    {
+        luaL_register(L, "foo", liblclientlib);
+        return 1;
+    }
+
+
+#elif defined (__LUA_JIT__)
     int 
     luaopen_liblclient(lua_State* L)
     {

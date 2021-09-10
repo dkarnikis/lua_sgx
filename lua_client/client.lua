@@ -1,17 +1,23 @@
-local client = require('liblclient')
-utils = require("utils")
 package.path = package.path .. ";../libs/?.lua"
+client = require('liblclient')
+utils = require("utils")
 dkjson = require("dkjson")
-mode = 1
-if arg == nil then
-    local f_config = utils.read_file('sconfig')[1]
-    local func = string.gmatch(f_config, '([^,]+)')
-    lua_code = func()
-    mode = tonumber(func())
-else
-    -- load  the libraries
-    lua_code = arg[1]
+
+function dump(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
 end
+
+local module_file_name = nil
+mode = 1
 config = nil
 functions = {}
 results = {}
@@ -20,10 +26,18 @@ tags[0] = "Lua_Remote"
 tags[1] = "SGX_Remote"
 tags[2] = "SGX_Local" 
 current_tag = tags[mode]
---utils = require("utils")
---config = utils.lines_from("config", mode)
---local remote_servers = #config
 local task_counter = 0
+lua_code = nil
+
+if _VERSION == "Lua 5.1" or arg == nil then
+    local f_config = utils.read_file('sconfig')[1]
+    local func = string.gmatch(f_config, '([^,]+)')
+    lua_code = func()
+    mode = tonumber(func())
+else
+    -- load  the libraries
+    lua_code = arg[1]
+end
 if lua_code == nil then
     print("Give a lua code")
     os.exit(1)
@@ -42,7 +56,6 @@ function send_modules(worker)
     end
 end
 
-
 function connect_to_worker(m)
     mode = m
     config = utils.lines_from("config", mode)
@@ -57,7 +70,6 @@ local function pick_worker()
     task_counter = task_counter + 1
     return (task_counter % remote_servers) + 1
 end
-
 
 function pack(...)
     -- Returns a new table with parameters stored into an array, with field "n" being the total number of parameters
@@ -126,4 +138,6 @@ function wrapper (obj, lib_name)
     end
     return obj
 end
-local res = loadfile(lua_code)()
+if lua_code ~= nil then
+    local res = loadfile(lua_code)()
+end
