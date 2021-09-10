@@ -27,3 +27,5 @@ export LD_LIBRARY_TOP=$PWD:$LD_LIBRARY_TOP
 echo "Building darkhttp for wrk2"
 cd $LUA_TOP/macro/darkhttpd
 make clean;make
+
+

@@ -1,5 +1,0 @@
-#Bench      Lua_Local  SGX_Local_E2E  SGX_Local_INIT  SGX_LOCAL_EXEC  LUA_R_E2E  LUA_R_NW  LUA_R_INIT  LUA_R_EXEC  SGX_R_E2E  SGX_R_NW  SGX_R_INIT  SGX_R_EXEC
-deltablue   0.024      0.988          0.962           0.056           0.025      0         0           0.024       0.046      0         0           0.003
-life        0.009      0.914          0.88            0.068           0.009      0         0           0.009       0.047      0         0           0.003
-mandelbrot  0.008      0.939          0.91            0.06            0.009      0         0           0.008       0.042      0         0           0
-queens      0.013      0.837          0.811           0.052           0.013      0         0           0.013       0.044      0         0           0.001
