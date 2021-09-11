@@ -42,7 +42,6 @@ static int luaB_print (lua_State *L) {
   return 0;
 }
 
-
 #define SPACECHARS	" \f\n\r\t\v"
 
 static const char *b_str2int (const char *s, int base, lua_Integer *pn) {

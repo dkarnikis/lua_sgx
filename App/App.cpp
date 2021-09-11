@@ -79,7 +79,7 @@ send_timers(char timer_data[100], int n_socket)
 {
     memset(timer_data, '\0', 100);
     sprintf(timer_data, "%.3f %.3f %.3f %.3f", e2e_time, network_time, sgx_time, exec_time);
-    ocall_send_packet(n_socket, (unsigned char *)timer_data, 100);
+    ocall_send_packet(n_socket, (unsigned char *)timer_data, strlen(timer_data));
 }
 
 extern "C" int lua_main(int argc, char **argv, int deo);

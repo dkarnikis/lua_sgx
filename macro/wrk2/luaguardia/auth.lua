@@ -4,6 +4,8 @@
 
 package.path = package.path .. ";../../libs/macro/wrk/?.lua"
 package.path = package.path .. ";../libs/?.lua"
+lua_client = require("lclient")
+lua_client.bootstrap()
 
 token = nil
 path  = "/authenticate"
@@ -11,10 +13,10 @@ auth = require("auth")
 auth = wrapper(auth)
 
 init = function()
-    connect_to_worker(mode)
-    module_file_name = nil
+    lua_client.connect_to_worker(lua_client.mode)
+    lua_client.set_module_file(nil)
     -- send the module info to the client
-    send_modules(config[1])
+    lua_client.send_modules(lua_client.get_config()[1])
 end
 
 request = function()

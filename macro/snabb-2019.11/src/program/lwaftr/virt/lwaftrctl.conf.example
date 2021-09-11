@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+# General
+
+SNABB_PATH=~/workspace/snabb
+SNABB_LWAFTR=$SNABB_PATH/src/program/lwaftr
+
+# QEMU
+
+NAME=lwaftr1
+
+NUMA_NODE=0
+QEMU_CORE=0
+
+MEM=2G
+HUGEPAGES_FS=/dev/hugepages
+
+KERNEL_PARAMS=
+BZ_IMAGE=~/.test_env/bzImage
+VM_IMAGE=~/.test_env/lwaftr-vm.img
+
+VM_PORT=5001
+VM_FORMAT=raw
+VM_IP=10.21.21.2
+
+IFACE=mgmt0
+NETSCRIPT=$SNABB_LWAFTR/virt/setup_networks/lwaftr1.sh
+
+SHARED_LOCATION=
+
+# SnabbNFV
+
+SNABBNFV_CORE1=1
+SNABBNFV_CONF1=$SNABB_LWAFTR/virt/ports/lwaftr1/a.cfg
+SNABBNFV_PCI1=0000:02:00.0
+SNABBNFV_MAC1=52:54:00:00:00:01
+SNABBNFV_SOCK1=/tmp/vh1a.sock
+
+SNABBNFV_CORE2=2
+SNABBNFV_CONF2=$SNABB_LWAFTR/virt/ports/lwaftr1/b.cfg
+SNABBNFV_PCI2=0000:02:00.1
+SNABBNFV_MAC2=52:54:00:00:00:02
+SNABBNFV_SOCK2=/tmp/vh1b.sock

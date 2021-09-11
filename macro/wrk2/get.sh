@@ -1,6 +1,6 @@
 mkdir -p results
-echo "#bench Vanilla SGX_Local LuaGuardia" > results/wrk2_req.dat
-echo "#bench Vanilla SGX_Local LuaGuardia" > results/wrk2_trans.dat
+echo "#bench Vanilla LuaGuardia SGX_Local" > results/wrk2_req.dat
+echo "#bench Vanilla LuaGuardia SGX_Local" > results/wrk2_trans.dat
 
 scripts=(luaguardia/counter.lua luaguardia/auth.lua luaguardia/report.lua)
 for i in `seq 0 $((${#scripts[@]} -1))`;

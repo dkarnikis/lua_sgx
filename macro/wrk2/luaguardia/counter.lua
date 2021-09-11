@@ -3,18 +3,20 @@
 -------------------------------------------------------------
 -- NOTE: each wrk thread has an independent Lua scripting
 -- context and thus there will be one counter per thread
-
 package.path = package.path .. ";../../libs/macro/wrk/?.lua"
 package.path = package.path .. ";../libs/?.lua"
 counter_val = 0
+lua_client = require("lclient")
+lua_client.bootstrap()
+
 counter = require("counter")
-counter = wrapper(counter)
+counter = lua_client.wrapper(counter)
 
 init = function()
-    connect_to_worker(mode)
-    module_file_name = nil
+    lua_client.connect_to_worker(lua_client.mode)
+    lua_client.set_module_file(nil)
     -- send the module info to the client
-    send_modules(config[1])
+    lua_client.send_modules(lua_client.get_config()[1])
 end
 
 request = function()

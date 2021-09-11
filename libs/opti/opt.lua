@@ -3,7 +3,7 @@ local opt = {}
 function opt.t_print(num)
     local i
     for i=0, num do
-        io.write('x')
+        print('x')
     end
 end
 

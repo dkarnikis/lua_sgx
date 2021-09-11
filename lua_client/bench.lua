@@ -4,8 +4,13 @@ package.path = package.path .. ";../libs/heavy/?.lua"
 package.path = package.path .. ";../libs/medium/?.lua"
 package.path = package.path .. ";../libs/light/?.lua"
 package.path = package.path .. ";../libs/opti/?.lua"
+package.path = package.path .. ";../libs/macro/snabb/?.lua"
 os.execute("rm -rf results; mkdir results");
+lua_client = require("lclient")
+lua_client.bootstrap()
 
+--local lclient = require("lclient")
+--lclient.bootstrap()
 
 default_loops = 1
 local loops = default_loops
@@ -42,38 +47,37 @@ function load_libs()
     xtea            = require("xtea")
     -- opts
     opt             = require("opt")
+    vpn             = require("vpn")
     -- after they have been loaded, we wrap them
-    binarytrees     = wrapper(binarytrees)
-    havlak          = wrapper(havlak)
-    recursive_fib   = wrapper(recursive_fib)
-    nbdoy           = wrapper(nbody)
+    vpn             = lua_client.wrapper(vpn)
+    binarytrees     = lua_client.wrapper(binarytrees)
+    havlak          = lua_client.wrapper(havlak)
+    recursive_fib   = lua_client.wrapper(recursive_fib)
+    nbdoy           = lua_client.wrapper(nbody)
 
-    cd              = wrapper(cd)
-    fasta           = wrapper(fasta)
-    ray             = wrapper(ray)
-    richards        = wrapper(richards)
+    cd              = lua_client.wrapper(cd)
+    fasta           = lua_client.wrapper(fasta)
+    ray             = lua_client.wrapper(ray)
+    richards        = lua_client.wrapper(richards)
 
-    deltablue       = wrapper(deltablue)
-    life            = wrapper(life)
-    mandelbrot      = wrapper(mandelbrot)
-    queens          = wrapper(queens)
+    deltablue       = lua_client.wrapper(deltablue)
+    life            = lua_client.wrapper(life)
+    mandelbrot      = lua_client.wrapper(mandelbrot)
+    queens          = lua_client.wrapper(queens)
     -- crypto 
-    blake2b         = wrapper(blake2b)
-    chacha20        = wrapper(chacha20)
-    checksum        = wrapper(checksum)
-    md5             = wrapper(md5)
-    norx            = wrapper(norx)
-    norx32          = wrapper(norx32)
-    rabbit          = wrapper(rabbit)
-    rc4             = wrapper(rc4)
-    salsa20         = wrapper(salsa20)
-    sha2            = wrapper(sha2)
-    xtea            = wrapper(xtea)
+    blake2b         = lua_client.wrapper(blake2b)
+    chacha20        = lua_client.wrapper(chacha20)
+    checksum        = lua_client.wrapper(checksum)
+    md5             = lua_client.wrapper(md5)
+    norx            = lua_client.wrapper(norx)
+    norx32          = lua_client.wrapper(norx32)
+    rabbit          = lua_client.wrapper(rabbit)
+    rc4             = lua_client.wrapper(rc4)
+    salsa20         = lua_client.wrapper(salsa20)
+    sha2            = lua_client.wrapper(sha2)
+    xtea            = lua_client.wrapper(xtea)
     -- opts
-    opt             = wrapper(opt)
-    -- my custom lib
-    test_print          = require("test_print")
-    test_print          = wrapper(test_print)
+    opt             = lua_client.wrapper(opt)
 end
 
 function send_modules(wrk)
@@ -90,16 +94,15 @@ function send_modules(wrk)
 end
 
 function do_bench(func, lib_func, func_name, m, data)
-    connect_to_worker(m)
-    local wrk = config[1]
+    lua_client.connect_to_worker(m)
+    local wrk = lua_client.get_config()[1]
     send_modules(wrk)
-    current_tag = tags[m]
-    print("Doing:", lib_func, current_tag)
+    lua_client.set_current_tag(tags[m])
+    print("Doing:", lib_func, lua_client.get_current_tag())
     for i = 1,loops, 1 do
         func(data)
     end
-    print("Done")
-    close_worker(config[1].socket)
+    lua_client.close_worker(wrk.socket)
     return get_avg_time(lib_func)
 end
 
@@ -108,7 +111,7 @@ function get_avg_time(func_name)
     local exec = 0
     local init = 0
     local nw = 0
-    local tag = tags[mode]
+    local tag = lua_client.get_tag(lua_client.get_mode())
     local array = results[func_name][tag]
     for k,v in ipairs(array) do
         e2e  = e2e + v.e2e
@@ -193,9 +196,9 @@ end
 
 load_libs()
 function do_algo()
-    do_light(100)
-    do_medium(100)
-    do_heavy(40)
+    do_light(10)
+    do_medium(10)
+    do_heavy(4)
 end
 
 function do_crypto(data)
@@ -315,11 +318,11 @@ end
 
 local data = string.rep('x', 1)
 -- completed
---do_algo()
---do_crypto(data)
---do_touches()
---do_prints()
---do_freads()
+do_algo()
+do_crypto(data)
+do_touches()
+do_prints()
+do_freads()
 --connect_to_worker(mode)
 --local wrk = config[1]
 --send_modules(wrk)

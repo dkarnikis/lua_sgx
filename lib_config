@@ -33,3 +33,5 @@ wrk:macro/wrk/wrk
 counter:macro/wrk/counter
 report:macro/wrk/report
 auth:macro/wrk/auth
+vpn:macro/snabb/vpn
+aead:crypto/aead_chacha_poly

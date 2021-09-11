@@ -1,0 +1,6 @@
+apps report:
+firewall
+Accepted packets: 53 (100%)
+Rejected packets: 0 (0%)
+Dropped packets:  0 (0%)
+E2E 29.5613350868 

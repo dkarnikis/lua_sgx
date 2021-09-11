@@ -11,6 +11,12 @@ echo "Building LuaGuardia client for lua5.3"
 cd $LUAG_CLIENT
 make clean;make
 cp liblclient.so $LUA_TOP/lua_client/
+echo "Building snabb"
+cd $LUA_TOP/macro/snabb-2019.11/
+make clean;make; cd src; make
+cd $LUAG_CLIENT
+make clean; make snabb=1
+cp liblclient.so $LUA_TOP/macro/snabb-2019.11/src/
 echo "Building wrk2"
 cd $LUA_TOP/macro/wrk2
 make clean;make
@@ -22,10 +28,8 @@ cp liblclient.so $LUA_TOP/macro/wrk2
 echo "Building LuaGuardia"
 cd $LUA_TOP/
 make clean;make
-echo "Don't forget to \`export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LUA_TOP\`"
-export LD_LIBRARY_TOP=$PWD:$LD_LIBRARY_TOP
 echo "Building darkhttp for wrk2"
 cd $LUA_TOP/macro/darkhttpd
 make clean;make
-
+echo "Don't forget to \`export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LUA_TOP\`"
 

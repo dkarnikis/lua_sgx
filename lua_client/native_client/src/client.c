@@ -166,10 +166,6 @@ recv_data(int *data_size, int socket_fd)
 unsigned char *
 lhandshake(int sock)
 {
-
-
-    
-
     Content c1, c2;
     unsigned char *aes_key;
     aes_key = (unsigned char *)malloc(2 * KEY_SIZE * sizeof(unsigned char));
@@ -396,7 +392,9 @@ static int lua_recv_response(lua_State* L)
         aes_key = luaL_checkstring(L, 2);
         plain = encrypt_chunk(res, b, aes_key);
     }
-    lua_pushstring(L, plain);
+    //printf("%d %d\n", strlen(plain), b);
+    //lua_pushstring(L, plain);
+    lua_pushlstring(L, plain, b);
     return 1;
 }
 
