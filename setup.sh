@@ -9,13 +9,13 @@ cp libdlua.so $LUA_TOP
 echo "Building LuaGuardia client for lua5.3"
 # build native lua client for lua5.3
 cd $LUAG_CLIENT
-make
+make clean;make
 cp liblclient.so $LUA_TOP/lua_client/
 echo "Building snabb"
 cd $LUA_TOP/macro/snabb-2019.11/
 make; cd src; make
 cd $LUAG_CLIENT
-make snabb=1
+make clean;make snabb=1
 cp liblclient.so $LUA_TOP/macro/snabb-2019.11/src/
 echo "Building wrk2"
 cd $LUA_TOP/macro/wrk2
@@ -23,7 +23,7 @@ make
 echo "Building LuaGuardia client for wrk2 using luajit"
 # build native wrk lua client with jit
 cd $LUAG_CLIENT
-make wrk=1
+make clean;make wrk=1
 cp liblclient.so $LUA_TOP/macro/wrk2
 echo "Building LuaGuardia"
 cd $LUA_TOP/

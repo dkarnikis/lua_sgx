@@ -25,7 +25,6 @@ void *spawn_lua_enclave(int s, int le);
 sgx_enclave_id_t l_setup_local_enclave(int argc, char **argv, int i);
 void l_setup_client_handshake(sgx_enclave_id_t eid, int socket);
 void l_print_timers(int print_nw);
-extern int single_enclave_instance, disable_execution_output;
 extern double sgx_time, e2e_time, exec_time;
 extern timespec tsgx_start, tsgx_stop, te2e_start, te2e_stop, texec_start, texec_stop;
 extern char *enclave_path;

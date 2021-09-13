@@ -197,8 +197,8 @@ end
 load_libs()
 function do_algo()
     do_light(100)
-    do_medium(4)
-    do_heavy(4)
+    do_medium(40)
+    do_heavy(40)
 end
 
 function do_crypto(data)

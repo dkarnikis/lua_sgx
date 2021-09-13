@@ -563,35 +563,27 @@ bootstrap_lua()
     // 0 uses e2e encryption, 1 is plain
     int err = luaL_dofile(L, "bootstrap.lua");
     if (err != 0) {
-        printf("--@@> %s\n", lua_tostring(L, -1));
+        printf("--> %s\n", lua_tostring(L, -1));
         fflush(stdout);
         abort();
     }
-    //fprintf(stderr, "hahaxd\n");
-    //lua_libraries_loaded = 1;
 }
 
 
 int
-main ()//int argc, char **argv)
+main ()
 {
-    //luaL_dofile(L, "exec.lua");
-//    lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
-//    lua_pushinteger(L, argc);  /* 1st argument */
-//    lua_pushlightuserdata(L, argv); /* 2nd argument */
-//    lua_pcall(L, 2, 1, 0);  /* do the call */
+    // parse the code
     int err = luaL_dostring(L, "load(read_file('code.lua'))()");
     if (err != 0) {
-        printf("---> %s\n", lua_tostring(L, -1));
+        printf("--> %s\n", lua_tostring(L, -1));
         fflush(stdout);
         abort();
     }
-
-    // get file size
-    //luaL_dofile(L, "code.lua");
+    // execute the code request
     err = luaL_dostring(L, parse_string);
     if (err != 0) {
-        printf("----> %s\n", lua_tostring(L, -1));
+        printf("--> %s\n", lua_tostring(L, -1));
         fflush(stdout);
         abort();
     }

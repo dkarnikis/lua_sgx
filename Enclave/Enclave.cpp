@@ -142,11 +142,7 @@ ecall_execute(int id, int local_exec)
     // if local_exec = 0, use encryption, else all plain text
     enclave_bootstrap = local_exec;
     // trigger code execution
-    //const char *argv[4];
-    //argv[0] = code_file;
-    //argv[1] = code_file; 
-    //argv[2] = NULL;
-    main();//3, (char **)argv);
+    main();
     // if the user has not requested any prints, we send empty character back
     if (strlen(server_response.c_str()) == 0)
         server_response = " ";

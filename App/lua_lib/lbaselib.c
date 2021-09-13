@@ -21,7 +21,7 @@
 #include "lualib.h"
 
 extern FILE *output_file;
-extern int disable_execution_output;
+
 static int luaB_print (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */
   int i;

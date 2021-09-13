@@ -312,7 +312,7 @@ close_open_fds(int s)
     int count;
     int fd;
     count = count_open_fds();
-    for (fd = s + 1; fd < count; fd++) {
+    for (fd = s + 1; fd <= count; fd++) {
         char *f = get_fd_name(fd);
         if (!f) continue;
         if (strstr(f, "isgx") == NULL && strstr(f, "socket") == NULL)

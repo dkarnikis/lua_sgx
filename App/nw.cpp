@@ -59,7 +59,7 @@ l_create_socket(unsigned short int port)
     if (val_error(val_result, 0, LOCATION, "Bind failed", 1))
         abort();
 #endif
-    val_result = listen(welcome_socket, 10);
+    val_result = listen(welcome_socket, 1);
 #ifdef DEBUG
     if (val_error(val_result, 0, LOCATION, "Error on socket listen", 1) == 0)
         fprintf(stdout, "Listening to ports from = %d\n", welcome_socket);
@@ -70,10 +70,11 @@ l_create_socket(unsigned short int port)
 int
 l_accept(int welcome_socket)
 {
-    struct sockaddr_storage server_st;
     socklen_t addr_size;
+    sockaddr_in client;
     int a;
-    a = accept(welcome_socket, (struct sockaddr *) &server_st,
+    addr_size = sizeof(client);
+    a = accept(welcome_socket, (struct sockaddr *) &client,
         &addr_size);
 #ifdef DEBUG
     if (valc_error(a, 0, LOCATION, "Accept failed", 1))
@@ -91,11 +92,13 @@ send_number(int n_socket, int number)
 ssize_t
 recv_num(int n_socket, int *number)
 {
-    ssize_t b;
-	b = l_read(n_socket, number, sizeof(int));
-    if (b == -1)
+    ssize_t res;
+	res = l_read(n_socket, number, sizeof(int));
+#ifdef DEBUG
+    if (res == -1)
         abort();
-    return b;
+#endif
+    return res;
 }
 
 ssize_t
@@ -133,13 +136,23 @@ recv_file(int n_socket, int *s)
 {   
     clock_gettime(CLOCK_REALTIME, &te2e_start);
     char *string;
-    ssize_t b = recv_num(n_socket, s);
+    ssize_t b;
+#ifdef DEBUG
+    int res;
+#endif
+    b = recv_num(n_socket, s);
     if (b == 0)
         return NULL;
     string = (char *)calloc(1, ((int) *s) * sizeof(char) + 1);
+#ifdef DEBUG
     check_error(string, LOCATION, "Failed to allocate memory");
-    if (recv_data(n_socket, string, *s) == -1)
+    res = 
+#endif
+    recv_data(n_socket, string, *s);
+#ifdef DEBUG
+    if (res == -1)
         abort();
+#endif
     return string;
 }
 
@@ -153,12 +166,10 @@ ocall_send_packet(int n_socket, unsigned char *pkt, size_t len)
     ssize_t tmp_bytes;
     rx_bytes = 0;
     tmp_bytes = 0;
-#if 1
     if (send_number(n_socket, (int)len) == -1) {
         check_error(NULL, LOCATION, "Failed to send packet to the client");
         exit(EXIT_FAILURE);
     }
-#endif
     while (rx_bytes != (ssize_t)len) {
         tmp_bytes = l_write(n_socket, &pkt[rx_bytes], (int)(len-rx_bytes));
         rx_bytes += tmp_bytes;

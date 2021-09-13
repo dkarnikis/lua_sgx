@@ -660,32 +660,28 @@ lua_State *L;
 void
 bootstrap_lua()
 {
+    int err;
     L = luaL_newstate();
     luaL_openlibs(L);
-    int err = luaL_dofile(L, "bootstrap.lua");
+    err = luaL_dofile(L, "bootstrap.lua");
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
         abort();
     }
 }
 
-int init = 0;
-int disable_execution_output = 0;
-
 int
-lua_main (int argc, char **argv, int d)
+lua_main (int argc, char **argv)
 {
+    int err;
+    // bootstrap the lua environment
     bootstrap_lua();
-    disable_execution_output = d;
     output_file = fopen("output", "w");
-    //luaL_dofile(L, "exec.lua");
     lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
     lua_pushinteger(L, argc);  /* 1st argument */
     lua_pushlightuserdata(L, argv); /* 2nd argument */
     lua_pcall(L, 2, 1, 0);  /* do the call */
-    //int a = luaL_dostring(L, parse_string);//json = dkjson.decode(json);print(findfunction(json[1])(json[2]))");
-
-    int err = luaL_dostring(L, parse_string);
+    err = luaL_dostring(L, parse_string);
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
         abort();

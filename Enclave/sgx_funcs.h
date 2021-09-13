@@ -54,6 +54,6 @@ char *read_code_data(char *fname, int *size, int id);
 /* the function to perform the dh encryption */
 Content encrypt(unsigned char *a, size_t len, unsigned char *b, unsigned char *c);
 char *rec_filename(FILE *f);
-int main();//int argc, char **argv);
+int main();
 extern int enclave_bootstrap;
 #endif
