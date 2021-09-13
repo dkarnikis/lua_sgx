@@ -36,7 +36,7 @@ else
         SGX_COMMON_CFLAGS += 
 endif
 
-LUA_FLAGS = -Ofast -Wall -Wno-misleading-indentation -Wno-sign-compare -Wno-stringop-overflow #-DDEBUG
+LUA_FLAGS = -Ofast -Wall -Wno-misleading-indentation -Wno-sign-compare -Wno-stringop-overflow #-g -DDEBUG
 SGX_COMMON_FLAGS += -Wall -Wextra -Winit-self -Wpointer-arith -Wreturn-type \
                     -Waddress -Wsequence-point -Wformat-security \
                     -Wfloat-equal -Wundef -Wshadow \

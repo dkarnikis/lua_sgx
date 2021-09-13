@@ -35,3 +35,4 @@ report:macro/wrk/report
 auth:macro/wrk/auth
 vpn:macro/snabb/vpn
 aead:crypto/aead_chacha_poly
+base64:base64

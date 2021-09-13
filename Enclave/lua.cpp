@@ -548,6 +548,11 @@ const char *parse_string = \
 "json = dkjson.decode(json);"\
 "local f = getf_from_lib(_G[json[1]], json[2]);"\
 "print(f(json[3]));";
+
+//const char *exec_request = \
+//
+//
+
 lua_State *L;
 
 void
@@ -558,28 +563,40 @@ bootstrap_lua()
     // 0 uses e2e encryption, 1 is plain
     int err = luaL_dofile(L, "bootstrap.lua");
     if (err != 0) {
-        printf("--> %s\n", lua_tostring(L, -1));
+        printf("--@@> %s\n", lua_tostring(L, -1));
         fflush(stdout);
         abort();
     }
+    //fprintf(stderr, "hahaxd\n");
+    //lua_libraries_loaded = 1;
 }
 
+
 int
-main (int argc, char **argv)
+main ()//int argc, char **argv)
 {
     //luaL_dofile(L, "exec.lua");
-    lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
-    lua_pushinteger(L, argc);  /* 1st argument */
-    lua_pushlightuserdata(L, argv); /* 2nd argument */
-    lua_pcall(L, 2, 1, 0);  /* do the call */
-    int err = luaL_dostring(L, parse_string);
+//    lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
+//    lua_pushinteger(L, argc);  /* 1st argument */
+//    lua_pushlightuserdata(L, argv); /* 2nd argument */
+//    lua_pcall(L, 2, 1, 0);  /* do the call */
+    int err = luaL_dostring(L, "load(read_file('code.lua'))()");
     if (err != 0) {
-        printf("--> %s\n", lua_tostring(L, -1));
+        printf("---> %s\n", lua_tostring(L, -1));
+        fflush(stdout);
+        abort();
+    }
+
+    // get file size
+    //luaL_dofile(L, "code.lua");
+    err = luaL_dostring(L, parse_string);
+    if (err != 0) {
+        printf("----> %s\n", lua_tostring(L, -1));
         fflush(stdout);
         abort();
     }
     // we are on local execution, close the lua state
-    if (enclave_bootstrap == 1)
+    if (enclave_bootstrap == 1) {
         lua_close(L);
-
+    }
 }

@@ -21,6 +21,13 @@ local function gettimeofday()
         return tonumber(gettimeofday_struct.tv_sec) + tonumber(gettimeofday_struct.tv_usec) / 1000000.0
 end
 
+function hahaxd()
+    if pcap.packets > 31000 then
+        return true
+    else
+        return false
+    end
+end
 
 function run(args)
     local x = gettimeofday()
@@ -31,7 +38,7 @@ function run(args)
     config.link(c, "net1.output -> net2.input")
     engine.configure(c)
     -- run for 5 seconds and show the app reports
-    engine.main({duration=2, report = { showapps=true }})
+    engine.main({done=hahaxd, report = {showapps = true, showlinks = true}})
     local x2 = gettimeofday()
     print(string.format("E2E %.2f Packets %d BytesALL %d", x2 - x, pcap.packets, pcap.bytes_sent))
 end

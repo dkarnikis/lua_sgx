@@ -4,15 +4,15 @@ utils = require("utils")
 client = require('liblclient')
 dkjson = require("dkjson")
 utils.boot(client)
+tags = {}
 lclient.mode = 0
-tags = {}
-task_counter = 0
-lua_code = 0
+lclient.atask_counter = 0
+lclient.lua_code = ''
 lclient.module_file_name = nil
-tags = {}
-results = {}
-functions = {}
-current_tag = ''
+lclient.tags = {}
+lclient.results = {}
+lclient.functions = {}
+lclient.current_tag = ''
 lclient.config = 0
 
 lclient.set_module_file = function(mod_f)
@@ -39,34 +39,25 @@ lclient.get_config = function()
     return lclient.config
 end
 
-lclient.get_tag = function(m)
-    return tags[m]
-end
-
-lclient.set_current_tag = function(t)
-    current_tag = t
-end
-
 lclient.get_current_tag = function()
-    return current_tag
+    return lclient.tags[lclient.get_mode()]
 end
 
 lclient.bootstrap = function()
-    tags[0] = "Lua_Remote"
-    tags[1] = "SGX_Remote"
-    tags[2] = "SGX_Local" 
+    lclient.tags[0] = "Lua_Remote"
+    lclient.tags[1] = "SGX_Remote"
+    lclient.tags[2] = "SGX_Local" 
     --current_tag = tags[mode]
-    task_counter = 0
-    lua_code = nil
+    lclient.task_counter = 0
 
     if _VERSION == "Lua 5.1" or arg == nil then
         local f_config = utils.read_file('sconfig')[1]
         local func = string.gmatch(f_config, '([^,]+)')
-        lua_code = func()
+        lclient.lua_code = func()
         lclient.set_mode(tonumber(func()))
     else
         -- load  the libraries
-        lua_code = arg[1]
+        lclient.lua_code = arg[1]
     end
 end
 
@@ -85,7 +76,7 @@ lclient.send_modules = function(worker)
 end
 
 lclient.connect_to_worker = function(m)
-    lclient.set_mode(m)
+    --lclient.set_mode(m)
     lclient.set_config(utils.lines_from("config", m))
 
 end
@@ -137,22 +128,22 @@ local function offload (...)
         exec = reg()
     }
     local fname = args[1] .. '.' .. args[2]
-    lclient.set_current_tag(tags[lclient.get_mode()])
-    table.insert(results[fname][lclient.get_current_tag()], obj)
+    --lclient.set_current_tag(lclient.tags[lclient.get_mode()])
+    table.insert(lclient.results[fname][lclient.get_current_tag()], obj)
     return res
 end
 
 lclient.wrapper = function(obj, lib_name)
     if type(obj) == "function" then
         return function(...)
-            local fname = lib_name .. '.' .. functions[obj]
-            if results[fname] == nil then
-                results[fname] = {}
-                results[fname]["Lua_Remote"] = {} 
-                results[fname]["SGX_Local"]  = {} 
-                results[fname]["SGX_Remote"] = {} 
+            local fname = lib_name .. '.' .. lclient.functions[obj]
+            if  lclient.results[fname] == nil then
+                lclient.results[fname] = {}
+                lclient.results[fname]["Lua_Remote"] = {} 
+                lclient.results[fname]["SGX_Local"]  = {} 
+                lclient.results[fname]["SGX_Remote"] = {} 
             end
-            local res = offload(lib_name, functions[obj], ...)
+            local res = offload(lib_name, lclient.functions[obj], ...)
             return res
         end
     elseif type(obj) == "table" then
@@ -163,7 +154,7 @@ lclient.wrapper = function(obj, lib_name)
             end
         end
         for k,v in pairs(obj) do
-            functions[v] = k
+            lclient.functions[v] = k
             obj[k] = lclient.wrapper(v, lib_name)
         end 
     end
@@ -171,7 +162,7 @@ lclient.wrapper = function(obj, lib_name)
 end
 
 lclient.run_code = function()
-    local res = loadfile(lua_code)()
+    local res = loadfile(lclient.lua_code)()
 end
 
 return lclient

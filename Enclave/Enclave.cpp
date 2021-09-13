@@ -23,7 +23,6 @@ std::string server_response;
 /* the keypair of the server */
 unsigned char server_public_key[crypto_box_PUBLICKEYBYTES];
 unsigned char server_private_key[crypto_box_SECRETKEYBYTES];
-int disable_execution_output = 0;       /* dont print the lua output on screen      */
 unsigned char client_public_key[crypto_box_PUBLICKEYBYTES];
 unsigned char encryption_key[KEY_SIZE * 2];
 const char *code_file = "code.lua";
@@ -57,19 +56,17 @@ unsigned char * code_decrypt(unsigned char *str, size_t len);
 int
 printf(const char* fmt, ...)
 {
-    #define BS 100
     int res;
-    char buf[BS] = {'\0'};
+    char buf[100] = {'\0'};
     size_t bob;
     va_list ap;
     res = 0;
     va_start(ap, fmt);
-    vsnprintf(buf, BS, fmt, ap);
+    vsnprintf(buf, 100, fmt, ap);
     va_end(ap);
     res += ocall_fwrite(&bob, buf, 1, strlen(buf), stdout);
     return res;   
 }
-
 
 /*
  * generate the public and private key of the server
@@ -80,7 +77,6 @@ ecall_gen_pkeys(void)
     crypto_box_keypair(server_public_key, server_private_key);
 }
 
-
 /*
  * return the public key of the server
  */
@@ -89,7 +85,6 @@ ecall_get_server_pkey(unsigned char *key, int k)
 {
     memcpy(key, server_public_key, k);
 }
-
 
 void
 randombytes(unsigned char *b, unsigned char len)
@@ -103,8 +98,6 @@ gen_encryption_key(unsigned char *b, size_t len)
     //unsigned char buffer[KEY_SIZE];
     sgx_read_rand(b, len);
 }
-
-
 
 /*
  * generate the aes key and send it to the client 
@@ -126,12 +119,11 @@ ecall_send_aes_key(int id)
  * initialize enclave flags for lua vm
  */
 void
-ecall_init(int di, FILE *stdi, FILE *stdo, FILE *stde)
+ecall_init(FILE *stdi, FILE *stdo, FILE *stde)
 {
     stdin = stdi;
     stdout = stdo;
     stderr = stde;
-    disable_execution_output = di;
     bootstrap_lua();
 }
 
@@ -149,23 +141,24 @@ ecall_execute(int id, int local_exec)
         bootstrap_lua();
     // if local_exec = 0, use encryption, else all plain text
     enclave_bootstrap = local_exec;
-    response = NULL;
-    const char *argv[4];
-    argv[0] = code_file;
-    argv[1] = code_file; 
-    argv[2] = NULL;
     // trigger code execution
-    main(3, (char **)argv);
-    /* if the user has not requested any prints, we send empty character back */
+    //const char *argv[4];
+    //argv[0] = code_file;
+    //argv[1] = code_file; 
+    //argv[2] = NULL;
+    main();//3, (char **)argv);
+    // if the user has not requested any prints, we send empty character back
     if (strlen(server_response.c_str()) == 0)
         server_response = " ";
     response = (char *)calloc(1, sizeof(char) * server_response.length() + 1);
     strncpy(response, server_response.c_str(), server_response.length() + 1);
+    // remote execution
     if (local_exec == 0) {
         encrypted_results = decrypt_chunks((unsigned char *)response, server_response.length());
         ocall_send_packet(id, (unsigned char *)encrypted_results, server_response.length());
         free(encrypted_results);
-    } else 
+    } else  
+        // local execution, offload the results
         ocall_send_packet(id, (unsigned char *)response, server_response.length() + 1);
 	// cleanup time
     free(response);

@@ -117,7 +117,7 @@ l_setup_enclave()
     (void)ret;
     clock_gettime(CLOCK_REALTIME, &tsgx_start);
     // spawn the new hardware enclave
-    ret = sgx_create_enclave(enclave_path, SGX_DEBUG_FLAG, &token,
+    ret = sgx_create_enclave("enclave.signed.so", SGX_DEBUG_FLAG, &token,
             &updated, &unique_eid, NULL);
 #ifdef DEBUG
     if (val_error(ret, SGX_SUCCESS, LOCATION, "Failed to create enclave", 1)) {
@@ -125,7 +125,7 @@ l_setup_enclave()
     }
 #endif
     /* initialize lua VM arguments and stdio */
-    ret = ecall_init(unique_eid, disable_execution_output, stdin, stdout, stdout);
+    ret = ecall_init(unique_eid, stdin, stdout, stdout);
 #ifdef DEBUG
     val_error(ret, SGX_SUCCESS, LOCATION, "Failed to initialize lua arguments", 0);
 #endif

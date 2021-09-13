@@ -94,10 +94,10 @@ function send_modules(wrk)
 end
 
 function do_bench(func, lib_func, func_name, m, data)
+    lua_client.set_mode(m)
     lua_client.connect_to_worker(m)
     local wrk = lua_client.get_config()[1]
     send_modules(wrk)
-    lua_client.set_current_tag(tags[m])
     print("Doing:", lib_func, lua_client.get_current_tag())
     for i = 1,loops, 1 do
         func(data)
@@ -111,8 +111,8 @@ function get_avg_time(func_name)
     local exec = 0
     local init = 0
     local nw = 0
-    local tag = lua_client.get_tag(lua_client.get_mode())
-    local array = results[func_name][tag]
+    local tag = lua_client.get_current_tag()
+    local array = lua_client.results[func_name][tag]
     for k,v in ipairs(array) do
         e2e  = e2e + v.e2e
         nw   = nw + v.nw
@@ -128,12 +128,12 @@ function do_remote(func_ptr, lib_func, func_name, ...)
     local lua_rem = do_bench(func_ptr, lib_func, func_name, 0, ...)
     local sgx_rem = do_bench(func_ptr, lib_func, func_name, 1, ...)
     local sgx_local = do_bench(func_ptr, lib_func, func_name, 2, ...)
-    results = {}
-    results.func_name = func_name
-    results.lua_rem = lua_rem
-    results.sgx_rem = sgx_rem
-    results.sgx_local = sgx_local
-    return results
+    lua_client.results = {}
+    lua_client.results.func_name = func_name
+    lua_client.results.lua_rem = lua_rem
+    lua_client.results.sgx_rem = sgx_rem
+    lua_client.results.sgx_local = sgx_local
+    return lua_client.results
 end
 
 function do_heavy(arg)
@@ -196,8 +196,8 @@ end
 
 load_libs()
 function do_algo()
-    do_light(10)
-    do_medium(10)
+    do_light(100)
+    do_medium(4)
     do_heavy(4)
 end
 
@@ -319,10 +319,10 @@ end
 local data = string.rep('x', 1)
 -- completed
 do_algo()
-do_crypto(data)
-do_touches()
-do_prints()
-do_freads()
+--do_crypto(data)
+--do_touches()
+--do_prints()
+--do_freads()
 --connect_to_worker(mode)
 --local wrk = config[1]
 --send_modules(wrk)
