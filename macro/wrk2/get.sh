@@ -1,4 +1,5 @@
 mkdir -p results
+rm -rf results/*
 echo "#bench Vanilla LuaGuardia SGX_Local" > results/wrk2_req.dat
 echo "#bench Vanilla LuaGuardia SGX_Local" > results/wrk2_trans.dat
 
@@ -11,9 +12,11 @@ do
     do		
         echo "${scripts[$i]},$mode" > sconfig
         echo "${scripts[$i]},$mode"
-        dat=$(./wrk -R 10000 -c1 -d 4 -t1 -s client.lua http://0.0.0.0:8080 | tail -n 2)
-        reqs=$( echo -n $dat | head | awk '{print $2}')
-        trans=$(echo -n $dat | tail | awk '{print $2}')
+        dat=$(./wrk -R 1000 -c1 -d 1 -t1 -s client.lua http://0.0.0.0:8080 | tail -n 2)
+        echo "${scripts[$i]},$mode" >>  "results/$(basename ${scripts[$i]} .lua)"
+        echo "$dat" >> "results/$(basename ${scripts[$i]} .lua)"
+        reqs=$( echo -n "$dat" | head | awk '{print $2}')
+        trans=$(echo -n "$dat" | tail | awk '{print $2}')
         echo -n " $reqs" >> results/wrk2_req.dat
         echo -n " $trans" >> results/wrk2_trans.dat
     done

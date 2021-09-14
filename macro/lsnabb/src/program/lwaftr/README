@@ -1,0 +1,15 @@
+Usage:
+  snabb lwaftr bench
+  snabb lwaftr check
+  snabb lwaftr compile-configuration
+  snabb lwaftr generate-configuration
+  snabb lwaftr migrate-configuration
+  snabb lwaftr monitor
+  snabb lwaftr query
+  snabb lwaftr quickcheck
+  snabb lwaftr run
+  snabb lwaftr soaktest
+
+Use --help for per-command usage.
+Example:
+    snabb lwaftr run --help

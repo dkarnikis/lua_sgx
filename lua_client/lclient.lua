@@ -49,7 +49,6 @@ lclient.bootstrap = function()
     lclient.tags[2] = "SGX_Local" 
     --current_tag = tags[mode]
     lclient.task_counter = 0
-
     if _VERSION == "Lua 5.1" or arg == nil then
         local f_config = utils.read_file('sconfig')[1]
         local func = string.gmatch(f_config, '([^,]+)')

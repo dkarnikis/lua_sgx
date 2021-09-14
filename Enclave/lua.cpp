@@ -549,10 +549,6 @@ const char *parse_string = \
 "local f = getf_from_lib(_G[json[1]], json[2]);"\
 "print(f(json[3]));";
 
-//const char *exec_request = \
-//
-//
-
 lua_State *L;
 
 void
@@ -569,25 +565,28 @@ bootstrap_lua()
     }
 }
 
-
 int
-main ()
+main()
 {
-    // parse the code
-    int err = luaL_dostring(L, "load(read_file('code.lua'))()");
+    int err;
+    // parse the sent requests
+    // if it's encrypted, it is decrypted inside the enclave
+    // else read the plaintext code and push it to the global env
+    err = luaL_dostring(L, "load(read_file('code.lua'))()");
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
         fflush(stdout);
         abort();
     }
-    // execute the code request
+    // evaluate the code and execute the requests function
+    // after the execution, fetch the results 
     err = luaL_dostring(L, parse_string);
     if (err != 0) {
         printf("--> %s\n", lua_tostring(L, -1));
         fflush(stdout);
         abort();
     }
-    // we are on local execution, close the lua state
+    // we are on local execution, close the lua state by cleaning up the resources
     if (enclave_bootstrap == 1) {
         lua_close(L);
     }

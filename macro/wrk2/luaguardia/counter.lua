@@ -52,6 +52,7 @@ request = function()
 end
 
 done = function(summary, latency, requests)
+    
     io.write(string.format("requests: %d,\n", summary.requests))
     io.write(string.format("duration_in_microseconds: %0.2f,\n", summary.duration))
     io.write(string.format("bytes: %d\n", summary.bytes))
