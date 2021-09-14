@@ -10,8 +10,8 @@ ifeq ($(wrk), 1)
 		# path to WRKJIT
         LIBS += -L ../../macro/wrk2/deps/luajit/src -lluajit  -D__LUA_JIT__
 else ifeq ($(snabb), 1)
-		LIBS += -L ../../macro/snabb-2019.11/lib/luajit/src -lraptorjit -D__RAPTOR__JIT__
-		INCLUDES += -I ../../macro/snabb-2019.11/lib/luajit/src
+		LIBS += -L ../../macro/lsnabb/lib/luajit/src -lraptorjit -D__RAPTOR__JIT__
+		INCLUDES += -I ../../macro/lsnabb/lib/luajit/src
 else
 		LIBS += -llua
 endif

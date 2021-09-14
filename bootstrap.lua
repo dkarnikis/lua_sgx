@@ -4,6 +4,7 @@ package.path = package.path .. ";libs/opti/?.lua"
 package.path = package.path .. ";libs/medium/?.lua"
 package.path = package.path .. ";libs/heavy/?.lua"
 package.path = package.path .. ";libs/light/?.lua"
+package.path = package.path .. ";libs/macro/snabb/pflua/?.lua"
 
 -- see if the file exists
 function file_exists(file)

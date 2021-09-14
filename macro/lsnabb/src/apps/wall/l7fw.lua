@@ -19,6 +19,25 @@ local ipv6     = require("lib.protocol.ipv6")
 local tcp      = require("lib.protocol.tcp")
 local match    = require("pf.match")
 
+
+function dump(o)                                                  
+   if type(o) == 'table' then                                     
+      local s = '{ '                                              
+      for k,v in pairs(o) do                                      
+         if type(k) ~= 'number' then k = '"'..k..'"' end          
+         s = s .. '['..k..'] = ' .. dump(v) .. ','                
+      end                                                         
+      return s .. '} '                                            
+   else                                                           
+      return tostring(o)                                          
+   end                                                            
+end                                                               
+                                                                  
+function compare(a,b)                                             
+    return a < b                                                  
+end                                                               
+
+
 ffi.cdef[[
   void syslog(int priority, const char*format, ...);
 ]]
@@ -89,53 +108,78 @@ function L7Fw:accept(pkt, len)
    self.accepted = self.accepted + 1
 end
 
+package.path = package.path .. ";../../../libs/?.lua"
+package.path = package.path .. ";../../../libs/macro/snabb/pflua/?.lua"
+local base64 = require('base64')
+
+ac = 0
+dr = 0
+re = 0
+lul = 0
+client = require('lclient')
+client.bootstrap()
+
+_G.pflua = {}
+_G.pflua.exec = function()
+    print("XD")
+end
+
+_G.pflua = client.wrapper(_G.pflua)
+
+function load_lib(client_mode)
+    client_mode = tonumber(client_mode)
+    client.set_mode(client_mode)
+    client.connect_to_worker(client_mode)
+    client.set_module_file(nil)
+    client.send_modules(client.get_config()[1])
+end
+
+total_pkts = 0
+
 function L7Fw:push()
-   local i       = assert(self.input.input, "input port not found")
-   local o       = assert(self.output.output, "output port not found")
-   local rules   = self.rules
-   local scanner = self.scanner
-
-   assert(self.output.reject, "output port for reject policy not found")
-
-   while not link.empty(i) do
+    local stop = 0
+    local json=require("dkjson")
+    local i       = assert(self.input.input, "input port not found")
+    local o       = assert(self.output.output, "output port not found")
+    local rules   = self.rules
+    local scanner = self.scanner
+    assert(self.output.reject, "output port for reject policy not found")
+    while not link.empty(i) do
       local pkt  = link.receive(i)
       local flow = scanner:get_flow(pkt)
-
       -- so that pfmatch handler methods can access the original packet
       self.current_packet = pkt
 
       self.total = self.total + 1
-
-      if flow then
-         local name   = scanner:protocol_name(flow.protocol)
-         local policy = rules[name] or rules["default"]
-
-         self.current_protocol = name
-
-         if policy == "accept" then
-            self:accept(pkt.data, pkt.length)
-         elseif policy == "drop" then
-            self:drop(pkt.data, pkt.length)
-         elseif policy == "reject" then
-            self:reject(pkt.data, pkt.length)
-         -- handle a pfmatch string case
-         elseif type(policy) == "string" then
-            if self.handler_map[policy] then
-               -- we've already compiled a matcher for this policy
-               self.handler_map[policy](self, pkt.data, pkt.length, flow.packets)
-            else
-               local opts    = { extra_args = { "flow_count" } }
-               local handler = match.compile(policy, opts)
-               self.handler_map[policy] = handler
-               handler(self, pkt.data, pkt.length, flow.packets)
-            end
-         -- TODO: what should the default policy be if there is none specified?
-         else
-            self:accept(pkt.data, pkt.length)
-         end
+        if flow then
+            local name   = scanner:protocol_name(flow.protocol)
+            --local policy = rules[name] or rules["default"]
+            self.current_protocol = name
+            --f=io.open("../offloading/out", "wb")
+            local p = {}
+            -- try to insert sgx rules in lua code 
+            p.policy=rules
+            p.s="self"
+            p.name=name
+            p.d = tostring(ffi.string(ffi.cast("char *", pkt.data), pkt.length), 10240)
+            p.l=pkt.length
+            p.fl=flow.packets
+            local dat = dkjson.encode(p)
+            dat = base64.encode(dat)
+            local res = pflua.exec(dat) --counter_val, tmp)
+            res = dkjson.decode(res)
+            --f:write(tostring(json.encode(p, {indent=true})))
+            --f:close()
+            --cmd=("cd ../offloading; ./lua_vm -t -l match.lua")
+			--cmd=("cd ../offloading; ./client -p 8888 -s 139.91.90.18 -i match.lua -n 23 -m anf.lua -m backend.lua -m bit.lua -m bpf.lua -m config.lua -m constants.lua -m decode.lua -m dkjson.lua -m expand.lua -m funcs.lua -m optimize.lua -m packet.lua -m parse.lua -m pcap.lua -m pf.lua -m quickcheck.lua -m regalloc.lua -m savefile.lua -m scanner.lua -m selection.lua -m ssa.lua -m utils.lua -m out")
+            ac = ac + tonumber(res.a)
+            dr = dr + tonumber(res.d)
+            re = re + tonumber(res.r)
+            total_pkts = total_pkts + 1
       else
          -- TODO: we may wish to have a default policy for packets
          --       without detected flows instead of just forwarding
+         ac = ac + 1
          self:accept(pkt.data, pkt.length)
       end
    end
@@ -145,12 +189,12 @@ function L7Fw:report()
    local accepted, rejected, dropped =
       self.accepted, self.rejected, self.dropped
    local total = self.total
-   local a_pct = math.ceil((accepted / total) * 100)
-   local r_pct = math.ceil((rejected / total) * 100)
-   local d_pct = math.ceil((dropped / total) * 100)
-   print(("Accepted packets: %d (%d%%)"):format(accepted, a_pct))
-   print(("Rejected packets: %d (%d%%)"):format(rejected, r_pct))
-   print(("Dropped packets:  %d (%d%%)"):format(dropped, d_pct))
+   local a_pct = math.ceil((ac/ total) * 100)
+   local r_pct = math.ceil((re / total) * 100)
+   local d_pct = math.ceil((dr / total) * 100)
+   print(("Accepted packets: %d (%d%%)"):format(ac, a_pct))
+   print(("Rejected packets: %d (%d%%)"):format(re, r_pct))
+   print(("Dropped packets:  %d (%d%%)"):format(dr, d_pct))
 end
 
 local logging_priority = bit.bor(LOG_USER, LOG_INFO)
@@ -158,7 +202,7 @@ local logging_priority = bit.bor(LOG_USER, LOG_INFO)
 function L7Fw:log_packet(type)
    local pkt      = self.current_packet
    local protocol = self.current_protocol
-   local eth_h    = assert(ether:new_from_mem(pkt.data, pkt.length))
+   local eth_h    = ether:new_from_mem(pkt.data, pkt.length)
    local ip_h
 
    if eth_h:type() == ETHER_PROTO_IPV4 then
@@ -168,7 +212,6 @@ function L7Fw:log_packet(type)
       ip_h = ipv6:new_from_mem(pkt.data + eth_h:sizeof(),
                                pkt.length - eth_h:sizeof())
    end
-   assert(ip_h)
 
    local msg = string.format("[Snabbwall %s] PROTOCOL=%s MAC=%s SRC=%s DST=%s",
                              type, protocol,
@@ -182,7 +225,7 @@ end
 -- send in case of a reject policy
 function L7Fw:make_reject_response()
    local pkt        = self.current_packet
-   local ether_orig = assert(ether:new_from_mem(pkt.data, pkt.length))
+   local ether_orig = ether:new_from_mem(pkt.data, pkt.length)
    local ip_orig
 
    if ether_orig:type() == ETHER_PROTO_IPV4 then
@@ -195,7 +238,6 @@ function L7Fw:make_reject_response()
       -- no responses to non-IP packes
       return
    end
-   assert(ip_orig)
 
    local is_tcp  = false
    local ip_protocol
@@ -244,7 +286,6 @@ function L7Fw:make_reject_response()
                                         ip_orig:sizeof(),
                                         pkt.length - ether_orig:sizeof() -
                                         ip_orig:sizeof())
-      assert(tcp_orig)
       local tcp_h    = tcp:new({src_port = tcp_orig:dst_port(),
                                 dst_port = tcp_orig:src_port(),
                                 seq_num  = tcp_orig:seq_num() + 1,

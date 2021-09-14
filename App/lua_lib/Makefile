@@ -11,13 +11,13 @@ SGX_COMMON_FLAGS += -Wall -Wextra -Winit-self -Wpointer-arith -Wreturn-type \
                     -Waddress -Wsequence-point -Wformat-security \
                     -Wfloat-equal -Wundef -Wshadow \
                     -Wcast-align -Wcast-qual -Wconversion -Wredundant-decls 
-SGX_COMMON_CXXFLAGS := $(SGX_COMMON_FLAGS) -Wnon-virtual-dtor -std=c++11 
+SGX_COMMON_CXXFLAGS := $(SGX_COMMON_FLAGS) -Wnon-virtual-dtor 
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -pie -fPIE -fPIC  -Wno-attributes -ldl
 
 
 
-CC= gcc -Ofast -std=c++11 -pie -fPIE -D_GLIBCXX_USE_CXX11_ABI=0 -pthread -fpermissive $(App_C_Flags) 
+CC= gcc -Ofast -pie -fPIE -D_GLIBCXX_USE_CXX11_ABI=0 -pthread $(App_C_Flags) 
 CFLAGS= -Ofast -Wall -Wextra -DLUA_COMPAT_5_2 $(SYSCFLAGS) $(MYCFLAGS)
 LDFLAGS= $(SYSLDFLAGS) $(MYLDFLAGS) -Ofast -lm    -Wl,--no-undefined  -Wl,--whole-archive -Wl,--no-whole-archive  -Wl,-Bsymbolic -Wl,--no-undefined -Wl,-pie -Wl,--export-dynamic -Wl,--defsym,__ImageBase=0 -Wl,--gc-sections -Wl,--allow-multiple-definition -fvisibility=hidden -std=gnu++11 -fpie -ffunction-sections -fdata-sections -fpermissive    -Winit-self -Wpointer-arith -Wreturn-type -Waddress -Wsequence-point -Wformat-security -Wfloat-equal -Wundef -Wshadow -Wcast-align -Wcast-qual -Wconversion -Wredundant-decls        -pie -fPIE -D_GLIBCXX_USE_CXX11_ABI=0 -pthread    -Wextra -Wall -Winit-self -Wpointer-arith -Wreturn-type -Waddress -Wsequence-point -Wformat-security -Wfloat-equal -Wundef -Wshadow -Wcast-align -Wcast-qual -Wconversion -Wredundant-decls       -pie -fPIE -fPIC -Wno-attributes -Ofast -pie -fPIE -fPIC  -Wno-attributes -pie -fPIE -D_GLIBCXX_USE_CXX11_ABI=0 -pthread -Ofast
 
