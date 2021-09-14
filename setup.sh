@@ -12,11 +12,11 @@ cd $LUAG_CLIENT
 make clean;make
 cp liblclient.so $LUA_TOP/lua_client/
 echo "Building snabb"
-cd $LUA_TOP/macro/snabb-2019.11/
+cd $LUA_TOP/macro/lsnabb
 make; cd src; make
 cd $LUAG_CLIENT
 make clean;make snabb=1
-cp liblclient.so $LUA_TOP/macro/snabb-2019.11/src/
+cp liblclient.so $LUA_TOP/macro/lsnabb
 echo "Building wrk2"
 cd $LUA_TOP/macro/wrk2
 make
