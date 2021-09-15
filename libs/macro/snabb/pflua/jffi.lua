@@ -1,30 +1,17 @@
-local json =require("dkjson")
-local ffi=require("ffi")
-function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
-end
-
-f=io.open('out1', 'r')
-arg = f:read("*a")
-res=json.decode(arg)
-a=res.a
-b=res.b
-c=res.c
---print(type(a))
---print(type(b))
---print(type(c))
-local str = ffi.cast("char *", b) + tonumber(c)
-local p = ffi.cast(a, str)[0]
+local ffi = require("ffi")
+local json = require("dkjson")
+local f = io.open("out1", "r")
+local arg = f:read("*a")
 f:close()
-local haha=io.open("hahaxd", "w")
-haha:write(p) --json.encode(p, {indent=true}))
-haha:close()
+local res = json.decode(arg)
+local cast = res.a -- the cast we do
+local lua_str = res.b -- the input buffer
+local offset = res.c -- the offset
+local c_str = ffi.new("unsigned char [10240]", lua_str)
+local res = (ffi.cast(cast, c_str + offset))[0]
+print(res)
+
+local bit = require("bit")
+local d1,c1,b1,a1 = lua_str:byte(offset+1, offset+4)
+local num =  bit.rshift(a1, 24) + bit.rshift(b1, 16) + bit.rshift(c1, 8) + d1
+print(math.floor(num))

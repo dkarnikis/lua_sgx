@@ -108,24 +108,23 @@ function L7Fw:accept(pkt, len)
    self.accepted = self.accepted + 1
 end
 
-    ac = 0
-    dr = 0
-    re = 0
+package.path = package.path .. ";../../../libs/?.lua"
+package.path = package.path .. ";../../../libs/macro/snabb/pflua/?.lua"
+local base64 = require('base64')
 
+ac = 0
+dr = 0
+re = 0
+lul = 0
 client = require('lclient')
 client.bootstrap()
+local n = 0
+local sgx_entries = {}
 
 _G.pflua = {}
 _G.pflua.exec = function()
     print("XD")
 end
-
-
-package.path = package.path .. ";../../../libs/?.lua"
-package.path = package.path .. ";../../../libs/macro/snabb/pflua/?.lua"
-local base64 = require('base64')
-
-
 
 _G.pflua = client.wrapper(_G.pflua)
 
@@ -137,9 +136,58 @@ function load_lib(client_mode)
     client.send_modules(client.get_config()[1])
 end
 
-local n = 0
-pkts_proc = 0
-pf_done = false
+total_pkts = 0
+
+--function L7Fw:push()
+--    local stop = 0
+--    local json=require("dkjson")
+--    local i       = assert(self.input.input, "input port not found")
+--    local o       = assert(self.output.output, "output port not found")
+--    local rules   = self.rules
+--    local scanner = self.scanner
+--    assert(self.output.reject, "output port for reject policy not found")
+--    while not link.empty(i) do
+--      local pkt  = link.receive(i)
+--      local flow = scanner:get_flow(pkt)
+--      -- so that pfmatch handler methods can access the original packet
+--      self.current_packet = pkt
+--
+--      self.total = self.total + 1
+--        if flow then
+--            local name   = scanner:protocol_name(flow.protocol)
+--            --local policy = rules[name] or rules["default"]
+--            self.current_protocol = name
+--            --f=io.open("../offloading/out", "wb")
+--            local p = {}
+--            -- try to insert sgx rules in lua code 
+--            p.policy=rules
+--            p.s="self"
+--            p.name=name
+--            p.d = tostring(ffi.string(ffi.cast("char *", pkt.data), pkt.length), 10240)
+--            p.l=pkt.length
+--            p.fl=flow.packets
+--            local dat = dkjson.encode(p)
+--            dat = base64.encode(dat)
+--            local res = pflua.exec(dat) --counter_val, tmp)
+--            res = dkjson.decode(res)
+--            --f:write(tostring(json.encode(p, {indent=true})))
+--            --f:close()
+--            --cmd=("cd ../offloading; ./lua_vm -t -l match.lua")
+--			--cmd=("cd ../offloading; ./client -p 8888 -s 139.91.90.18 -i match.lua -n 23 -m anf.lua -m backend.lua -m bit.lua -m bpf.lua -m config.lua -m constants.lua -m decode.lua -m dkjson.lua -m expand.lua -m funcs.lua -m optimize.lua -m packet.lua -m parse.lua -m pcap.lua -m pf.lua -m quickcheck.lua -m regalloc.lua -m savefile.lua -m scanner.lua -m selection.lua -m ssa.lua -m utils.lua -m out")
+--            ac = ac + tonumber(res.a)
+--            dr = dr + tonumber(res.d)
+--            re = re + tonumber(res.r)
+--            total_pkts = total_pkts + 1
+--      else
+--         -- TODO: we may wish to have a default policy for packets
+--         --       without detected flows instead of just forwarding
+--         ac = ac + 1
+--         self:accept(pkt.data, pkt.length)
+--      end
+--   end
+--end
+--
+
 
 function L7Fw:push()
     local stop = 0
@@ -154,50 +202,84 @@ function L7Fw:push()
       -- so that pfmatch handler methods can access the original packet
       self.current_packet = pkt
       self.total = self.total + 1
-      pkts_proc = pkts_proc + 1
         if flow then
             local name   = scanner:protocol_name(flow.protocol)
+            --local policy = rules[name] or rules["default"]
             self.current_protocol = name
+            --local opts    = { extra_args = { "flow_count" } }
             local p = {}
+            --print(name)
             -- try to insert sgx rules in lua code 
             p["data"] = tostring(ffi.string(ffi.cast("char *", pkt.data), pkt.length), 10240)
 			--p["policy"] = rules
 			p["name"] = name;
             p["l"] = pkt.length
             p["fl"] = flow.packets
-            p["rules"] = rules --rules[name] or rules["default"]
-            local obj = dkjson.encode(p)
-            obj = base64.encode(obj)
-            local res = pflua.exec(obj)
-            res = dkjson.decode(res)
-            if res.a == 1 then
-                self:accept(pkt.data, pkt.length)
-            elseif res.d == 1 then
-                self:drop(pkt.data, pkt.length)
-            else
-                self:reject(pkt.data, pkt.length)
-            end
-            --self:drop(pkt.data, pkt.length)
+			sgx_entries[n] = p
+			n = n + 1
       else
          -- TODO: we may wish to have a default policy for packets
          --       without detected flows instead of just forwarding
+         --ac = ac + 1
+		 --ac = ac + 1
+		 local p = {}
+		 p["data"] = ""--tostring(ffi.string(ffi.cast("char *", pkt.data), pkt.length), 10240)
+		--p["policy"] = rules
+		 p["name"] = "drop"--name;
+		 p["l"] = "" --pkt.length
+		 p["fl"] = 0 --flow.packets
+		 sgx_entries[n] = p
+		 n = n + 1
          self:drop(pkt.data, pkt.length)
       end
    end
+--
+--	f:write(tostring(json.encode(sgx_entries)))
+--	f:close()
+--	--cmd=("cd ../offloading; ./lua_vm -t -l match.lua")
+--	cmd=("cd ../offloading; ./client -p 8888 -s 139.91.90.18 -i match.lua -n 23 -m anf.lua -m backend.lua -m bit.lua -m bpf.lua -m config.lua -m constants.lua -m decode.lua -m dkjson.lua -m expand.lua -m funcs.lua -m optimize.lua -m packet.lua -m parse.lua -m pcap.lua -m pf.lua -m quickcheck.lua -m regalloc.lua -m savefile.lua -m scanner.lua -m selection.lua -m ssa.lua -m utils.lua -m out ")
+--	local h = io.popen(cmd)
+--	local res = h:read("*a")
+--	--h:close()
+--	local handler = json.decode(res)
+--	ac = ac + tonumber(handler.a)
+--	dr = dr + tonumber(handler.d)
+--	re = re + tonumber(handler.r)
+--
+end
+
+function send_sgx()
+    local dat = dkjson.encode(sgx_entries)
+    dat = base64.encode(dat)
+    local res = pflua.exec(dat) --counter_val, tmp)
+    res = dkjson.decode(res)
+    ac = ac + tonumber(res.a)
+    dr = dr + tonumber(res.d)
+    re = re + tonumber(res.r)
 end
 
 function L7Fw:report()
-    local accepted, rejected, dropped =
-    self.accepted, self.rejected, self.dropped
-    local total = self.total
-    local a_pct = math.ceil((self.accepted / total) * 100)
-    local r_pct = math.ceil((self.rejected / total) * 100)
-    local d_pct = math.ceil((self.dropped / total) * 100)
-    print(("Accepted packets: %d (%d%%)"):format(self.accepted, a_pct))
-    print(("Rejected packets: %d (%d%%)"):format(self.rejected, r_pct))
-    print(("Dropped packets:  %d (%d%%)"):format(self.dropped, d_pct))
-    pf_done = true
+   
+    --send_sgx()
+    
+   local accepted, rejected, dropped =
+      self.accepted, self.rejected, self.dropped
+   local total = self.total
+   local a_pct = math.ceil((ac/ total) * 100)
+   local r_pct = math.ceil((re / total) * 100)
+   local d_pct = math.ceil((dr / total) * 100)
+   print(("Accepted packets: %d (%d%%)"):format(ac, a_pct))
+   print(("Rejected packets: %d (%d%%)"):format(re, r_pct))
+   print(("Dropped packets:  %d (%d%%)"):format(dr, d_pct))
 end
+
+
+
+
+
+
+
+
 
 local logging_priority = bit.bor(LOG_USER, LOG_INFO)
 

@@ -9,10 +9,7 @@ os.execute("rm -rf results; mkdir results");
 lua_client = require("lclient")
 lua_client.bootstrap()
 
---local lclient = require("lclient")
---lclient.bootstrap()
-
-default_loops = 1
+default_loops = 2
 local loops = default_loops
 -- the module name we are going to offload
 local module_file_name = nil
@@ -100,7 +97,7 @@ function do_bench(func, lib_func, func_name, m, data)
     send_modules(wrk)
     print("Doing:", lib_func, lua_client.get_current_tag())
     for i = 1,loops, 1 do
-        func(data)
+        print(func(data))
     end
     lua_client.close_worker(wrk.socket)
     return get_avg_time(lib_func)
@@ -194,14 +191,22 @@ function do_medium(arg)
     os.execute("cat results/medium | column -t > a; mv a results/medium;");
 end
 
+function copy_config(c)
+    os.execute("cp ../configs/" .. c .." ../lib_config")
+end
+
 load_libs()
 function do_algo()
+    copy_config("light_config")
     do_light(100)
+    copy_config("medium_config")
     do_medium(40)
+    copy_config("heavy_config")
     do_heavy(40)
 end
 
 function do_crypto(data)
+    os.execute("cp ../configs/crypto_config ../lib_config")
     local r1 = do_remote(blake2b.hash, 'blake2b.hash', 'blake2b', data)
     local r2 = do_remote(chacha20.run, 'chacha20.run', 'chacha20', data)
     local r3 = do_remote(checksum.crc32, 'checksum.crc32', 'checksum', data)

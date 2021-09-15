@@ -4,7 +4,6 @@ pcaps=../../new_pcaps/
 ls ${pcaps}
 echo "#Bench Vanilla LocalSGX Luaguardia" > results/vpn.dat
 for i in ${pcaps}/*.pcap; do
-    
     for ((mode=0; mode<=2; mode++))
     do		
         echo $(basename $i .pcap)

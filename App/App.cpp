@@ -191,6 +191,7 @@ spawn_lua_enclave(int n_socket, int local_mode)
     val_result = receive_modules(n_socket);
     e2e_time = 0.0f;
     while (1) { 
+        exec_time = 0.0f;
         buf = recv_file(n_socket, &code_len);
         if (buf == NULL)
             break;
@@ -264,9 +265,7 @@ spawn_lua_og(int n_socket)
         if (!buf)
             break;
         network_time = 0;
-        sgx_time = 0;
-
-        /* receive the code file from the client */
+        // receive the code file from the client
 #ifdef DEBUG
         if (!buf)
             goto cleanup;

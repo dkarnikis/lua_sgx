@@ -16,7 +16,7 @@ cd $LUA_TOP/macro/lsnabb
 make; cd src; make
 cd $LUAG_CLIENT
 make clean;make snabb=1
-cp liblclient.so $LUA_TOP/macro/lsnabb
+cp liblclient.so $LUA_TOP/macro/lsnabb/src
 echo "Building wrk2"
 cd $LUA_TOP/macro/wrk2
 make
@@ -31,5 +31,5 @@ make
 echo "Building darkhttp for wrk2"
 cd $LUA_TOP/macro/darkhttpd
 make
-echo "Don't forget to \`export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LUA_TOP\`"
+echo "Don't forget to \`export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$LUA_TOP\`"
 

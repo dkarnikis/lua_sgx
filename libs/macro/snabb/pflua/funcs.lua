@@ -5,7 +5,7 @@ local floor = math.floor
 local MOD = 2^32
 local MODM = MOD-1
 
-function accept(s, p, l)
+function drop(s, p, l)
     print("Accpted")
 end
 

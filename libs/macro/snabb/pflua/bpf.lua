@@ -1,6 +1,6 @@
---module(...,package.seeall)
+module(...,package.seeall)
 
---local ffi = require("ffi")
+local ffi = require("ffi")
 local bit = require("bit")
 local band = bit.band
 
