@@ -629,10 +629,19 @@ end
 
 end -- object havlak
 
-local havlak = {}
-function havlak.run_iter(n)
+function table.copy(t)
+    local u = { }
+    for k, v in pairs(t) do u[k] = v end
+    return setmetatable(u, getmetatable(t))
+end
+
+local l_havlak = {}
+function l_havlak.run_iter(n)
+    for k, v in pairs(havlak) do
+        havlak[k] = {}
+    end
     local result = LoopTesterApp.new():main(n, n, 10, 10, 5)
     assert(result[1] > 0 and result[2] > 0)
     return
 end
-return havlak
+return l_havlak

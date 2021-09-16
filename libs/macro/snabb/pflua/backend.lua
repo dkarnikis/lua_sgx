@@ -29,7 +29,7 @@ function ocall(a,b,offset)
 	c1 = nil
 	b1 = nil
 	a1 = nil
-	    return math.floor(math.floor(num))
+    return math.floor(math.floor(num))
 end
 
 
@@ -201,6 +201,8 @@ local function cleanup(expr, is_last)
 		return { 'label', expr[2], cleanup(expr[3], is_last) }
 	end
 end
+
+--self.accept = _G.accept
 
 local function filter_builder(...)
 	-- Reserve first part for libraries.

@@ -1,5 +1,4 @@
 module(...,package.seeall)
-
 local utils = require('pf.utils')
 
 local program_name = 'pflua-quickcheck'

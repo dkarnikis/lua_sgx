@@ -1131,6 +1131,12 @@ void lj_alloc_destroy(void *msp)
     CALL_MUNMAP(base, size);
   }
 }
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
 
 static LJ_NOINLINE void *lj_alloc_malloc(void *msp, size_t nsize)
 {

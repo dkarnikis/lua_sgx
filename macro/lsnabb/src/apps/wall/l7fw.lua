@@ -108,16 +108,12 @@ function L7Fw:accept(pkt, len)
    self.accepted = self.accepted + 1
 end
 
-    ac = 0
-    dr = 0
-    re = 0
 
 client = require('lclient')
 client.bootstrap()
 
 _G.pflua = {}
 _G.pflua.exec = function()
-    print("XD")
 end
 
 
@@ -159,13 +155,10 @@ function L7Fw:push()
             local name   = scanner:protocol_name(flow.protocol)
             self.current_protocol = name
             local p = {}
-            -- try to insert sgx rules in lua code 
             p["data"] = tostring(ffi.string(ffi.cast("char *", pkt.data), pkt.length), 10240)
-			--p["policy"] = rules
 			p["name"] = name;
             p["l"] = pkt.length
             p["fl"] = flow.packets
-            p["rules"] = rules --rules[name] or rules["default"]
             local obj = dkjson.encode(p)
             obj = base64.encode(obj)
             local res = pflua.exec(obj)
@@ -177,7 +170,6 @@ function L7Fw:push()
             else
                 self:reject(pkt.data, pkt.length)
             end
-            --self:drop(pkt.data, pkt.length)
       else
          -- TODO: we may wish to have a default policy for packets
          --       without detected flows instead of just forwarding

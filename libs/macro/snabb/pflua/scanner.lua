@@ -1,5 +1,4 @@
 module(..., package.seeall)
-
 local util  = require("apps.wall.util")
 local const = require("apps.wall.constants")
 local lib   = require("core.lib")

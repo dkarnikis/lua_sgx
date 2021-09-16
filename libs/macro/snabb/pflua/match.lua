@@ -6,45 +6,27 @@ local anf = require('anf')
 local ssa = require('ssa')
 local backend = require('backend')
 
-
 match = {}
 match.__index = match
 
-dr = 0
-ac = 0
-re = 0
-
-function get_rejected()
-	return re
-end
-
-function get_accepted()
-	return ac
-end
-
-function get_dropped()
-	return dr
-end
--- called by pfmatch handler, handle rejection response
-function reject(pkt, len)
-	link.transmit(self.output.reject, self:make_reject_response())
-	self.rejected = self.rejected + 1
-
-	if self.logging == "on" then
-		self:log_packet("REJECT")
-	end
-
-	packet.free(self.current_packet)
-end
-
--- called by pfmatch handler, forward packet
-function accept(pkt, len)
-	link.transmit(self.output.output, self.current_packet)
-	self.accepted = self.accepted + 1
-end
-
-
-
+---- called by pfmatch handler, handle rejection response
+--function reject(pkt, len)
+--	link.transmit(self.output.reject, self:make_reject_response())
+--	self.rejected = self.rejected + 1
+--
+--	if self.logging == "on" then
+--		self:log_packet("REJECT")
+--	end
+--
+--	packet.free(self.current_packet)
+--end
+--
+---- called by pfmatch handler, forward packet
+--function accept(pkt, len)
+--	link.transmit(self.output.output, self.current_packet)
+--	self.accepted = self.accepted + 1
+--end
+--
 
 
 local function split(str, pat)
@@ -421,23 +403,28 @@ function compile(str, opts)
 function drop(pkt, len)
 	--packet.free(self.current_packet)
 	--self.dropped = self.dropped + 1
-	dr = dr + 1
+    _G.accepted = 0
+    _G.rejected = 0
+	_G.dropped = 1
 end
 
 function accept(pkt, len)
-	ac = ac + 1
+	_G.accepted = 1
+    _G.rejected = 0
+    _G.dropped = 0
+	--packet.free(self.current_packet)
 end
 
 function reject(pkt, len)
-	re = re + 1
+    _G.accepted = 0
+    _G.dropped = 0
+	_G.rejected = 1
+	--packet.free(self.current_packet)
 end
-
 
 return {
     compile = compile,
     drop = drop,
 	accept = accept,
-	get_rejected = get_rejected,
-	get_accepted = get_accepted,
-	get_dropped = get_dropped
+    reject = reject,
 }

@@ -1,6 +1,7 @@
 mkdir -p results/pf
 rm -rf results/pf/*
 pcaps=../../new_pcaps
+cp ../../../configs/pflua_config ../../../lib_config
 ls ${pcaps}
 echo "#Bench Vanilla LocalSGX Luaguardia" > results/pf.dat
 for i in ${pcaps}/*.pcap; do

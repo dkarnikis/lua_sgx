@@ -17,7 +17,7 @@ function load_libs()
     -- first load the libraries in the _G
     -- heavy 
     binarytrees     = require("binarytrees")
-    havlak          = require("havlak")
+    l_havlak          = require("havlak")
     recursive_fib   = require("recursive_fib")
     nbody           = require("nbody")
     -- medium 
@@ -48,7 +48,7 @@ function load_libs()
     -- after they have been loaded, we wrap them
     vpn             = lua_client.wrapper(vpn)
     binarytrees     = lua_client.wrapper(binarytrees)
-    havlak          = lua_client.wrapper(havlak)
+    l_havlak          = lua_client.wrapper(l_havlak)
     recursive_fib   = lua_client.wrapper(recursive_fib)
     nbdoy           = lua_client.wrapper(nbody)
 
@@ -97,7 +97,7 @@ function do_bench(func, lib_func, func_name, m, data)
     send_modules(wrk)
     print("Doing:", lib_func, lua_client.get_current_tag())
     for i = 1,loops, 1 do
-        print(func(data))
+        func(data)
     end
     lua_client.close_worker(wrk.socket)
     return get_avg_time(lib_func)
@@ -134,7 +134,7 @@ function do_remote(func_ptr, lib_func, func_name, ...)
 end
 
 function do_heavy(arg)
-    local r1 = do_remote(havlak.run_iter, 'havlak.run_iter', 'havlak', arg)
+    local r1 = do_remote(l_havlak.run_iter, 'l_havlak.run_iter', 'l_havlak', arg)
     local r2 = do_remote(nbody.run_iter, 'nbody.run_iter', 'nbody', arg)
     local r3 = do_remote(recursive_fib.run_iter, 'recursive_fib.run_iter', 'fib', arg)
     local r4 = do_remote(binarytrees.run_iter, 'binarytrees.run_iter', 'binarytrees', arg)
@@ -197,10 +197,10 @@ end
 
 load_libs()
 function do_algo()
-    copy_config("light_config")
-    do_light(100)
-    copy_config("medium_config")
-    do_medium(40)
+    --copy_config("light_config")
+    --do_light(100)
+    --copy_config("medium_config")
+    --do_medium(40)
     copy_config("heavy_config")
     do_heavy(40)
 end
@@ -241,11 +241,13 @@ function do_crypto(data)
 end
 
 function do_touches()
+    os.execute("cp ../configs/opt_config ../lib_config")
     do_reads()
     do_writes()
 end
 
 function do_reads()
+    os.execute("cp ../configs/opt_config ../lib_config")
     local lim = 1024 * 1024 * 4
     local i = 1024
     file = io.open("results/reads", "w")
@@ -262,6 +264,7 @@ function do_reads()
 end
 
 function do_writes()
+    os.execute("cp ../configs/opt_config ../lib_config")
     local lim = 1024 * 1024 * 4
     local i = 1024
     file = io.open("results/writes", "w")
@@ -279,6 +282,7 @@ end
 
 -- start printing from 10K to 1M
 function do_prints()
+    os.execute("cp ../configs/opt_config ../lib_config")
     local lim = 1000000
     local i = 10000
     file = io.open("results/prints", "w")
@@ -300,6 +304,7 @@ end
 
 -- start printing from 10K to 1M
 function do_freads()
+    os.execute("cp ../configs/opt_config ../lib_config")
     local lim = 4 * 1024 * 1024
     local i = 64
     module_file_name = 'out'
@@ -321,14 +326,10 @@ function do_freads()
     os.execute("cat results/fread | column -t > a; mv a results/fread;");
 end
 
-local data = string.rep('x', 1)
+local data = string.rep('x', 1024 * 1024)
 -- completed
 do_algo()
---do_crypto(data)
---do_touches()
---do_prints()
---do_freads()
---connect_to_worker(mode)
---local wrk = config[1]
---send_modules(wrk)
---print(test_print.my_print("lala"))
+do_crypto(data)
+do_touches()
+do_prints()
+do_freads()

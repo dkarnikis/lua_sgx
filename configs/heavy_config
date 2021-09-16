@@ -1,6 +1,6 @@
 dkjson:dkjson
 som:som
 binarytrees:heavy/binarytrees
-havlak:heavy/havlak
+l_havlak:heavy/havlak
 recursive_fib:heavy/recursive_fib
 nbody:heavy/nbody

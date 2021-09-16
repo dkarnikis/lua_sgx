@@ -1,59 +1,54 @@
 local match = require("match")
+_G.accept = match.accept
+_G.drop = match.drop
+_G.reject = match.reject
+
 local pflua = {}
 self = {}
 self.handler_map = {}
-
-pflua.exec = function(dat)
-    accepted = 0
-    dropped = 0
-    rejected = 0
-
-    dat = base64.decode(dat)
-    local x = dkjson.decode(dat)
-    local rules = x.rules
-    --rules = { BITTORRENT = [[match { flow_count >= 5 or dst net 10.10.10.22 => drop; otherwise => accept }]], default = "accept" }
-    local policy = rules[x.name] or rules["default"]
-    if policy == "accept" then
-        accepted = accepted + 1
-    elseif policy == "drop" then
-        dropped = dropped + 1
-    elseif policy == "reject" then
-        rejected = rejected + 1
-    elseif type(policy) == "string" then
-        --    if self.handler_map[policy] then
-        --        self.handler_map[policy](self, pkt, len, x.fl)
-        --    else
-        local opts = { extra_args = { "flow_count"}}
-        --        local handler = match.compile(policy, opts)
-        --        self.handler_map[policy] = handler
-        --        --print(self, x.data, x.l, x.fl)
-        --        handler(self, x.data, x.l, x.fl)
-        --    end
-        ---else
-        ---    accepted = 2
-        ---end
-        local obj1 = {
-            accept = function (self, pkt, len)
-                accepted = 1
-            end,
-            drop = function(self, pkt, len) 
-                dropped = 1
-            end,
-            reject = function(self, pkt, len)
-                rejected = 1
-            end,
-            match = match.compile(policy, opts)
-        }
-        obj1:match(x.data ,x.l, x.fl)
-    else
-        print("XD")
-        accepted = 1
-        --match.ac = match.ac + 1 --dropped = dropped + 1
-    end
-    res = {}
-    res.a=accepted
-    res.d=dropped
-    res.r=rejected
-    return dkjson.encode(res)
-end
-return pflua
+self.handler_map.accept = _G.accept
+self.accept = _G.accept
+self.drop = _G.drop
+self.reject = _G.reject
+self.accepted = 0
+self.rejected = 0
+self.dropped = 0
+self.flow_count = 0
+    rules = { default = 'accept'}
+    pflua.exec = function(dat)
+        _G.accepted = 0
+        -- in case an error happens, we drop
+        _G.dropped = 1
+        _G.rejected = 0
+        dat = base64.decode(dat)
+        local x = dkjson.decode(dat)
+        local policy = rules[x.name] or rules["default"]
+        if policy == "accept" then
+            accepted = accepted + 1
+        elseif policy == "drop" then
+            dropped = dropped + 1
+        elseif policy == "reject" then
+            rejected = rejected + 1
+        elseif type(policy) == "string" then
+            local opts = { extra_args = { "flow_count"}}
+            if self.handler_map[policy] then
+                pcall(function()
+                    --self.handler_map[policy](self, x.data, x.l, x.fl)
+                    self.handler_map[policy](self, x.data, x.l, x.fl)
+                end)
+            else
+                pcall(function()
+                    local handler = match.compile(policy, opts)
+                    self.handler_map[policy] = handler
+                    handler(self, x.data, x.l, x.fl)end)
+                end
+            else
+                _G.accepted = 1
+            end
+            res = {}
+            res.a=_G.accepted
+            res.d=_G.dropped
+            res.r=_G.rejected
+            return dkjson.encode(res)
+        end
+        return pflua

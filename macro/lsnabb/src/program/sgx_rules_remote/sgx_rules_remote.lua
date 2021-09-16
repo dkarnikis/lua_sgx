@@ -39,7 +39,7 @@ local host_ip  = "192.168.1.8"
 local host_mac = "01:23:45:67:89:ab"
 
 function df()
-    if fw.pkts_proc > 1 then
+    if fw.pkts_proc > 10000 then
         return true
     end
     return false
@@ -53,27 +53,7 @@ function run (args)
     -- configuration of the Snabb app network
     local c = config.new()
     fw.load_lib(args[3])
-    local rules = { 
-        DNS = [[match { src net 10.1.1.4 and flow_count > 10 => accept; otherwise => drop;}]],
-        NFS = [[ match { flow_count <8 or src net 139.25.22.2 => drop; otherwise =>accept;}]],
-        NETBIOS = [[match {flow_count >= 10 and src net 111.111.111.111 => accept;
-        otherwise => drop}]],
-        BITTORRENT = [[match { flow_count >= 5 and
-        dst net 10.10.10.22 
-            => drop;
-            otherwise => accept }]],
-    UNKNOWN = [[match { flow_count >= 5 and
-    src net 10.1.3.143 or dst net 10.1.3.143 or src net 10.1.6.18
-    or udp
-    => drop;
-    otherwise => accept }]],
-    default = 
-    [[match { flow_count >= 5 and
-    dst net 10.10.10.22 or src net 10.1.3.143 or dst net 10.1.3.143 or src net 10.1.6.18
-    or udp or src net 0.0.0.0 and flow_count > 5 
-    => drop;
-    otherwise => accept }]]}
-    --
+    local rules = {}
     -- configuration table for l7fw
     local fw_config = { scanner = s,
     rules = rules,

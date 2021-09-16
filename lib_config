@@ -1,3 +1,6 @@
 dkjson:dkjson
-base64:base64
-pflua:macro/snabb/pflua/pflua
+som:som
+binarytrees:heavy/binarytrees
+l_havlak:heavy/havlak
+recursive_fib:heavy/recursive_fib
+nbody:heavy/nbody

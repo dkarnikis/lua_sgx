@@ -1,6 +1,5 @@
 local expand={}
 local utils = require('utils')
-
 local verbose = os.getenv("PF_VERBOSE");
 
 local expand_arith, expand_relop, expand_bool

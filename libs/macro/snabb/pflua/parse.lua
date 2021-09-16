@@ -1,9 +1,7 @@
 local parse={}
 allow_address_of = true
-
 local utils = require('utils')
 local constants = require('constants')
-
 local ipv4_to_int, ipv6_as_4x32 = utils.ipv4_to_int, utils.ipv6_as_4x32
 local uint32 = utils.uint32
 local filter_args = utils.filter_args

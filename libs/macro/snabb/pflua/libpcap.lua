@@ -1,5 +1,4 @@
 module(...,package.seeall)
-
 local ffi = require("ffi")
 local types = require("pf.types") -- Load FFI declarations.
 local pcap -- The pcap library, lazily loaded.

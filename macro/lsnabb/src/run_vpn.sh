@@ -1,6 +1,7 @@
 mkdir -p results/vpn
 rm -rf results/vpn/*
 pcaps=../../new_pcaps/
+cp ../../../configs/vpn_config ../../../lib_config
 ls ${pcaps}
 echo "#Bench Vanilla LocalSGX Luaguardia" > results/vpn.dat
 for i in ${pcaps}/*.pcap; do
