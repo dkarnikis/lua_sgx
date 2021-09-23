@@ -9,7 +9,7 @@ os.execute("rm -rf results; mkdir results");
 lua_client = require("lclient")
 lua_client.bootstrap()
 
-default_loops = 2
+default_loops = 5
 local loops = default_loops
 -- the module name we are going to offload
 local module_file_name = nil
@@ -197,10 +197,10 @@ end
 
 load_libs()
 function do_algo()
-    --copy_config("light_config")
-    --do_light(100)
-    --copy_config("medium_config")
-    --do_medium(40)
+    copy_config("light_config")
+    do_light(100)
+    copy_config("medium_config")
+    do_medium(40)
     copy_config("heavy_config")
     do_heavy(40)
 end
