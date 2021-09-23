@@ -22,7 +22,7 @@ local function gettimeofday()
 end
 
 -- total packets before exiting
-local total_packets = 31000 --31000
+local total_packets = 10000 --31000
 
 function hahaxd()
     if pcap.packets > total_packets then
