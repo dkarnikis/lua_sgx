@@ -7,13 +7,15 @@ SRC_DIR=src
 OBJ_DIR=obj
 
 ifeq ($(wrk), 1)
-		# path to WRKJIT
-        LIBS += -L ../../macro/wrk2/deps/luajit/src -lluajit  -D__LUA_JIT__
+	# path to WRKJIT
+	LIBS += -L ../../macro/wrk2/deps/luajit/src -lluajit  -D__LUA_JIT__
+	INCLUDES += -I ../../macro/wrk2/deps/luajit/src
 else ifeq ($(snabb), 1)
-		LIBS += -L ../../macro/lsnabb/lib/luajit/src -lraptorjit -D__RAPTOR__JIT__
-		INCLUDES += -I ../../macro/lsnabb/lib/luajit/src
+	LIBS += -L ../../macro/lsnabb/lib/luajit/src -lraptorjit -D__RAPTOR__JIT__
+	INCLUDES += -I ../../macro/lsnabb/lib/luajit/src
 else
-		LIBS += -llua
+	LIBS += -L/usr/lib/x86_64-linux-gnu/ -llua5.3
+	INCLUDES += -I /usr/include/lua5.3/
 endif
 
 SRC_FILES := $(wildcard $(SRC_DIR)/*.c)

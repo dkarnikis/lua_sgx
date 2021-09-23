@@ -629,19 +629,16 @@ end
 
 end -- object havlak
 
-function table.copy(t)
-    local u = { }
-    for k, v in pairs(t) do u[k] = v end
-    return setmetatable(u, getmetatable(t))
-end
-
 local l_havlak = {}
 function l_havlak.run_iter(n)
-    for k, v in pairs(havlak) do
-        havlak[k] = {}
-    end
+
     local result = LoopTesterApp.new():main(n, n, 10, 10, 5)
     assert(result[1] > 0 and result[2] > 0)
+--    print(dkjson.encode(havlak))
+
+    setmetatable(havlak, {})
+    collectgarbage("collect")
+    collectgarbage("collect")
     return
 end
 return l_havlak
