@@ -115,7 +115,6 @@ l_setup_enclave()
     sgx_status_t ret;
     int updated;
     (void)ret;
-    clock_gettime(CLOCK_REALTIME, &tsgx_start);
     // spawn the new hardware enclave
     ret = sgx_create_enclave("enclave.signed.so", SGX_DEBUG_FLAG, &token,
             &updated, &unique_eid, NULL);
@@ -132,8 +131,6 @@ l_setup_enclave()
 #ifdef DEBUG
     val_error(ret, SGX_SUCCESS, LOCATION, "Failed to initialize lua arguments", 0);
 #endif
-    clock_gettime(CLOCK_REALTIME, &tsgx_stop);
-    sgx_time = get_time_diff(tsgx_stop, tsgx_start) / ns;
     return unique_eid;
 }
 
