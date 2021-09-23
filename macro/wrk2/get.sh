@@ -12,13 +12,13 @@ do
     do		
         echo "${scripts[$i]},$mode" > sconfig
         echo "${scripts[$i]},$mode"
-        dat=$(./wrk -R 1000 -c1 -d 1 -t1 -s client.lua http://0.0.0.0:8080 | tail -n 2)
-        echo "${scripts[$i]},$mode" >>  "results/$(basename ${scripts[$i]} .lua)"
-        echo "$dat" >> "results/$(basename ${scripts[$i]} .lua)"
-        reqs=$( echo -n "$dat" | head | awk '{print $2}')
-        trans=$(echo -n "$dat" | tail | awk '{print $2}')
-        echo -n " $reqs" >> results/wrk2_req.dat
-        echo -n " $trans" >> results/wrk2_trans.dat
+        dat=$(./wrk -R 1000 -c1 -d 60 -t1 -s client.lua http://128.30.64.222:8080 | tail -n 2)
+        printf "%s\n" "${scripts[$i]},$mode" >>  "results/$(basename ${scripts[$i]} .lua)"
+        printf "%s\n" "$dat" >> "results/$(basename ${scripts[$i]} .lua)"
+        reqs=$(echo -n "$dat" | head -n1 | awk '{print $2}')
+        trans=$(echo -n "$dat" | tail -n1 | awk '{print $2}')
+        printf " %s" "$reqs" >> results/wrk2_req.dat
+        printf " %s" "$trans" >> results/wrk2_trans.dat
     done
     echo "" >> results/wrk2_req.dat
     echo "" >> results/wrk2_trans.dat
