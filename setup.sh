@@ -1,6 +1,7 @@
 echo "Exporting Variables"
 export LUA_TOP=$PWD
 export LUAG_CLIENT=$LUA_TOP/lua_client/native_client
+mkdir $LUAG_CLIENT/obj
 echo "Building vanilla lua VM"
 # build remote lua vm without SGX
 cd $LUA_TOP/App/lua_lib
