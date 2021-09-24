@@ -1,0 +1,18 @@
+set terminal postscript enhanced eps defaultplex \
+	leveldefault color dashed dashlength 2.0 linewidth 1 \
+	"Helvetica" 24
+set output '../figures/micro_exec_m.eps'
+set size 1,0.6
+
+
+set style data histogram
+set style histogram  cluster 
+set style fill solid border -1
+
+set yrange[0:1.5]
+set ytics 0,0.5,2
+set xtics nomirror 
+set key top left
+
+plot '../data/micro/medium' u 2:xtic(1) t "Vanilla",	\
+     ''                    u 13          t "LuaGuardia"

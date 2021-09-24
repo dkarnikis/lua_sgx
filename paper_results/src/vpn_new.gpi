@@ -1,0 +1,24 @@
+set terminal postscript enhanced eps defaultplex \
+	leveldefault color dashed dashlength 2.0 linewidth 1 \
+	"Helvetica" 22
+set output '../figures/vpn_new.eps'
+set size 1,0.7
+
+set key font "Helvetica,20"
+
+
+set style data histogram
+set style histogram  cluster 
+set style fill solid border -1
+set yrange [0:135]
+
+set xtics nomirror rotate by -40 left font "Helvetica,22"
+set key top center 
+
+set ylabel "Execution Time (Seconds)"
+unset xlabel
+set bmargin 4
+
+plot '../data/snabb/vpn.dat' u 2:xtic(1) t "Vanilla",	\
+     ''                    u 4         t "LuaGuardia", \
+     '' using 0:($2 + 8):($5) with labels font "Helvetica,20" t " "

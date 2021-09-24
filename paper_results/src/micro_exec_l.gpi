@@ -1,0 +1,24 @@
+set terminal postscript enhanced eps defaultplex \
+	leveldefault color dashed dashlength 2.0 linewidth 1 \
+	"Helvetica" 24
+set output '../figures/micro_exec_l.eps'
+set size 1,0.6
+
+#set key font "Helvetica,22"
+
+set style data histogram
+set style histogram  cluster 
+set style fill solid border -1
+
+set yrange [0:0.05]
+set ytics 0,0.01,0.05
+set xtics nomirror
+
+#set xtics nomirror rotate by -45 left 
+unset key
+
+set ylabel "Time (Seconds)"
+
+plot '../data/micro/light' u 2:xtic(1) t "Vanilla",	\
+     ''                    u 13        t "LuaGuardia"
+

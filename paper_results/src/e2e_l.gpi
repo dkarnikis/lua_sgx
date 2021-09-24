@@ -1,0 +1,22 @@
+set terminal postscript enhanced eps defaultplex \
+	leveldefault color dashed dashlength 2.0 linewidth 1 \
+	"Helvetica" 24
+set output '../figures/micro_e2e_l.eps'
+set size 1,0.6
+
+set style data histogram
+set style histogram  cluster 
+set style fill solid border -1
+
+set yrange[0:1]
+set ytics 0,0.2,0.8
+
+set xtics nomirror
+unset key
+
+set ylabel "Execution Time (Seconds)"
+
+plot '../data/micro/light' u 2:xtic(1) t "Vanilla",		\
+     ''                    u 3         t "SGX Local",		\
+     ''                    u 10         t 'LuaGuardia'
+##     ''                    u 10        t "SGX Remote Opts",	\

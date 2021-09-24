@@ -1,0 +1,4 @@
+#bench   Vanilla    LuaGuardia  SGX_Local  %VANILLA_LUAGUARIDA
+counter  8027.28    12350.28    515.19     53.85%
+auth     4398.32    7950.86     257.21     80.77%
+report   641994.10  641986.37   641992.53  2%

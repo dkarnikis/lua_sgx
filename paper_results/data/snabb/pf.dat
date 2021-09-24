@@ -1,0 +1,12 @@
+#Bench(secs)   Vanilla  LocalSGX  LuaGuardia  %VANILLA_LUAGUARDIA
+bittorent      14.10    245.38    10.03       28%
+iseries        13.38    244.25    9.73        27%
+mDNS3          13.94    243.49    10.56       24%
+nfsv2          14.52    244.75    9.96        31%
+nfsv3          13.46    245.97    8.90        33%
+rtp            12.94    244.12    7.95        38%
+smtp           17.62    250.40    8.88        49%
+telnet-cook    15.57    246.43    11.03       29%
+telnet-raw     14.96    246.14    11.73       21%
+tftp-rrq       14.07    243.84    10.13       28%
+tftp-wrq       14.04    245.63    9.43        32%

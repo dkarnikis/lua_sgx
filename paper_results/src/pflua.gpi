@@ -1,0 +1,22 @@
+set terminal postscript enhanced eps defaultplex \
+	leveldefault color dashed dashlength 2.0 linewidth 1 \
+	"Helvetica" 22
+set output '../figures/pflua.eps'
+set size 1,0.7
+
+set key font "Helvetica,22"
+
+set style data histogram
+set style histogram  cluster 
+set style fill solid border -1
+set yrange [0:25]
+
+set xtics nomirror rotate by -40 left font "Helvetica,22" 
+set key top right
+
+set ylabel "Execution Time (Seconds)"
+set bmargin 4
+
+plot '../data/snabb/pf.dat' u 2:xtic(1) t "Vanilla",	\
+     ''                  u 4         t "LuaGuardia", \
+     '' using 0:($2+2):($5) with labels font "Helvetica,20" t " "

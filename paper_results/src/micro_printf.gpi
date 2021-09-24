@@ -1,0 +1,25 @@
+set terminal postscript enhanced eps defaultplex \
+	leveldefault color dashed dashlength 2.0 linewidth 1 \
+	"Helvetica" 22
+set output '../figures/micro_printf.eps'
+set size 1,0.7
+
+set key font "Helvetica,20"
+
+
+set xtics nomirror rotate by -45 left 
+set ylabel "Execution Time (Seconds)"
+set xlabel "Number of Prints"
+set yrange[0:10]
+set ytics 0,2,10
+set grid ytics lc rgb '#B8B8B8' lt 0 lw 4
+set xrange[-1:11]
+set key top left
+
+
+plot '../data/micro/prints' u 2:xtic(1)   with lp lw 6 pt 7 t "Vanilla",	\
+     ''                   u 5             with lp lw 6 pt 7 t "SGX",		\
+     ''                   u 13            with lp lw 6 pt 7 t "LuaGuardia"
+
+
+

@@ -1,0 +1,40 @@
+set terminal postscript enhanced eps defaultplex \
+	leveldefault color dashed dashlength 2.0 linewidth 1 \
+	"Helvetica" 22
+set output '../figures/micro_touches.eps'
+
+set key font "Helvetica,20"
+
+set multiplot layout 2,1
+
+set ylabel "Execution Time (Seconds)" offset 1,-5
+set yrange[0:1.8]
+set grid ytics lc rgb '#B8B8B8' lt 0 lw 4
+set xrange[-1:13]
+set key  horizontal samplen 2 at 13,-0.2 
+set ytics 0,0.4,1.6
+unset xtics
+set xlabel " "
+set bmargin 3
+set label "Read" at 0,1.4
+
+plot '../data/micro/reads' u 2:xtic(1) with lp lw 6 pt 7 t "Vanilla",	\
+     ''                    u 3         with lp lw 6 pt 7 t "SGX",		\
+     ''                    u 4         with lp lw 6 pt 7 t "SGX Init",	\
+     ''                    u 5         with lp lw 6 pt 7 t "SGX Exec"
+
+
+set xlabel "Array size"
+set xtics nomirror rotate by -45 left 
+unset key
+set tmargin 0
+set ylabel " "
+unset bmargin
+unset label
+set label "Write" at 0,1.4
+plot '../data/micro/writes' u 2:xtic(1) with lp lw 6 pt 7 t "Vanilla",	\
+     ''                    u 3         with lp lw 6 pt 7 t "SGX",		\
+     ''                    u 4         with lp lw 6 pt 7 t "SGX Init",	\
+     ''                    u 5         with lp lw 6 pt 7 t "SGX Exec"
+
+

@@ -1,0 +1,26 @@
+set terminal postscript enhanced eps defaultplex \
+	leveldefault color dashed dashlength 2.0 linewidth 1 \
+	"Helvetica" 22
+set output '../figures/micro_fread.eps'
+
+set size 1,0.7
+set key font "Helvetica,20"
+
+
+set xtics nomirror rotate by -45 left 
+set ylabel "Execution Time (Seconds)"
+set xlabel "Data size per read"
+set yrange[0:5.5]
+set ytics 0,1,4
+set grid ytics lc rgb '#B8B8B8' lt 0 lw 4
+set xrange[-1:17]
+set key top center
+
+
+plot '../data/micro/fread' u 2:xtic(1) with lp lw 6 pt 7 t "Vanilla",	\
+     ''                  u 3         with lp lw 6 pt 7 t "SGX",		\
+     ''                  u 4         with lp lw 6 pt 7 t "SGX Init",	\
+     ''                  u 5         with lp lw 6 pt 7 t "SGX Exec"
+
+
+

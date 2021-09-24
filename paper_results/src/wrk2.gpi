@@ -1,0 +1,29 @@
+set terminal postscript enhanced eps defaultplex \
+	leveldefault color dashed dashlength 2.0 linewidth 1 \
+	"Helvetica" 22
+set output '../figures/wrk2.eps'
+set size 1,0.7
+
+set key font "Helvetica,20"
+
+set style data histogram
+set style histogram  cluster 
+set style fill solid border -1
+
+set yrange [0:30000]
+set ytics nomirror
+
+set xtics nomirror rotate by -45 left 
+set key top left samplen 4
+set y2tics nomirror
+set y2range [0:9000]
+set bmargin 3.3
+
+set ylabel "Throughput KB/sec"
+set y2label "Requests per second"
+
+plot '../data/wrk2/wrk2_trans.dat' u 2:xtic(1) t "Vanilla xput",	\
+     ''                            u 3         t "LuaGuardia xput",		\
+     '../data/wrk2/wrk2_req.dat' u 2:xtic(1) axes x1y2 with lp lw 6 ps 2 pt 7 t "Vanilla req/s",		\
+     ''                     u 3         axes x1y2 with lp lw 6 ps 2 pt 7 t "LuaGuardia req/s", \
+     #'../data/wrk2/wrk2_trans.dat' using 0:($2 + 5):($5) with labels font "Helvetica,20" t " "
