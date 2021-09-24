@@ -12,7 +12,7 @@ cd $LUA_TOP/lua_client/native_client
 make clean
 rm -rf $LUA_TOP/lua_client/results
 rm -rf $LUA_TOP/macro/wrk2/results
-cd $LUA_TOP/macro/snabb-2019.11/
+cd $LUA_TOP/macro/lsnabb
 make clean
 cd $LUA_TOP
 find . -name "tags" | xargs rm -f
