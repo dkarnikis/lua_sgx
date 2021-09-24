@@ -1,6 +1,0 @@
-# misc temp files
-tmp/*
-*~
-*.core
-ktrace.out
-obj/*
