@@ -1,4 +1,4 @@
-#Bench Vanilla Luaguardia Local_SGX
+#Bench(secs) Vanilla LocalSGX LuaGuardia
 bittorent 14.10 245.38 10.03
 iseries 13.38 244.25 9.73
 mDNS3 13.94 243.49 10.56
