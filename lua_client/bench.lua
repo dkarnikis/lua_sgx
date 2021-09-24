@@ -191,17 +191,10 @@ function do_medium(arg)
     os.execute("cat results/medium | column -t > a; mv a results/medium;");
 end
 
-function copy_config(c)
-    os.execute("cp ../configs/" .. c .." ../lib_config")
-end
-
 load_libs()
 function do_algo()
-    copy_config("light_config")
     do_light(100)
-    copy_config("medium_config")
     do_medium(40)
-    copy_config("heavy_config")
     do_heavy(40)
 end
 
