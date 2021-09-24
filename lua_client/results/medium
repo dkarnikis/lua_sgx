@@ -1,0 +1,5 @@
+#Bench              Lua_Local  SGX_Local_E2E  SGX_Local_INIT  SGX_LOCAL_EXEC  LUA_R_E2E  LUA_R_NW  LUA_R_INIT  LUA_R_EXEC  SGX_R_E2E  SGX_R_NW  SGX_R_INIT  SGX_R_EXEC
+collisiondetection  0.4756     1.2788         0.7558          0.5404          0.485      0         0.733       0.4756      0.4878     0         0           0.4772
+fasta               0.6064     1.4058         0.7564          0.667           0.616      0         0.795       0.6064      0.6346     0         0           0.6254
+ray                 0.509      1.5028         0.7338          0.789           0.51       0         0.736       0.509       0.753      0         0           0.7426
+richards            1.1466     2.092          0.768           1.341           1.1566     0         0.736       1.1466      1.3244     0         0           1.314

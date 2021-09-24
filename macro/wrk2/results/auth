@@ -1,0 +1,9 @@
+luaguardia/auth.lua,0
+requests_per_sec: 10.91
+bytes_transfer_per_sec: 4398.32
+luaguardia/auth.lua,1
+requests_per_sec: 19.73
+bytes_transfer_per_sec: 7950.86
+luaguardia/auth.lua,2
+requests_per_sec: 0.64
+bytes_transfer_per_sec: 257.21

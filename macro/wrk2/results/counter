@@ -1,0 +1,9 @@
+luaguardia/counter.lua,0
+requests_per_sec: 19.92
+bytes_transfer_per_sec: 8027.28
+luaguardia/counter.lua,1
+requests_per_sec: 30.65
+bytes_transfer_per_sec: 12350.28
+luaguardia/counter.lua,2
+requests_per_sec: 1.28
+bytes_transfer_per_sec: 515.19

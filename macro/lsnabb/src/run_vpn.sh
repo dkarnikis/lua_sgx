@@ -2,12 +2,11 @@ mkdir -p results/vpn
 rm -rf results/vpn/*
 pcaps=../../new_pcaps/
 cp ../../../configs/vpn_config ../../../lib_config
-ls ${pcaps}
 echo "#Bench Vanilla LocalSGX Luaguardia" > results/vpn.dat
 for i in ${pcaps}/*.pcap; do
     for ((mode=0; mode<=2; mode++))
     do		
-        echo $(basename $i .pcap)
+        echo $(basename $i .pcap) $mode
         sudo ./snabb luaguardia_firewall $i out 1 $mode> results/vpn/"$(basename $i .pcap)"_enc_res_$mode
         sudo ./snabb luaguardia_firewall out base 0 $mode > results/vpn/"$(basename $i .pcap)"_dec_res_$mode
         rm -f out base

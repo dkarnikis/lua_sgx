@@ -22,9 +22,6 @@ local function gettimeofday()
     return tonumber(gettimeofday_struct.tv_sec) + tonumber(gettimeofday_struct.tv_usec) / 1000000.0
 end
 
-
-
-
 -- basic module imports
 local raw  = require("apps.socket.raw")
 local pcap = require("apps.pcap.pcap")
@@ -39,7 +36,7 @@ local host_ip  = "192.168.1.8"
 local host_mac = "01:23:45:67:89:ab"
 
 function df()
-    if fw.pkts_proc > 10000 then
+    if fw.pkts_proc > 300 then
         return true
     end
     return false

@@ -1,0 +1,5 @@
+#Bench       Lua_Local  SGX_Local_E2E  SGX_Local_INIT  SGX_LOCAL_EXEC  LUA_R_E2E  LUA_R_NW  LUA_R_INIT  LUA_R_EXEC  SGX_R_E2E  SGX_R_NW  SGX_R_INIT  SGX_R_EXEC
+l_havlak     5.7034     20.534         0.7294          19.8238         5.7138     0         0.735       5.7034      21.3664    0         0           21.3566
+nbody        11.7106    14.8834        0.7234          14.176          11.7198    0         0.736       11.7106     13.7898    0         0           13.7798
+fib          11.399     12.5462        0.7234          11.839          11.4086    0         0.724       11.399      11.7758    0         0           11.7654
+binarytrees  12.1592    12.9248        0.7394          12.2026         12.1694    0         0.728       12.1592     11.9258    0         0           11.916

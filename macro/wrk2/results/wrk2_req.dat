@@ -1,0 +1,4 @@
+#bench Vanilla LuaGuardia SGX_Local
+counter 19.92 30.65 1.28
+auth 10.91 19.73 0.64
+report 999.99 999.98 999.99
